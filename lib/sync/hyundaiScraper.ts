@@ -38,9 +38,10 @@ export class HyundaiMallScraper extends BaseScraper {
     for (const cat of categories) {
       try {
         const url = `${baseUrl}&diningGubn=${cat.id}`;
-        console.log(`[Scraper] Fetching ${branchName} - ${cat.label}...`);
+        console.log(`[Scraper] Requesting: ${branchName} - ${cat.label}`);
         
         const response = await fetch(url, {
+          cache: 'no-store', // Force Vercel to bypass cache
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Referer': 'https://www.ehyundai.com/',
