@@ -6,6 +6,9 @@ interface MallCardProps {
   name: string;
   city: string;
   district: string;
+  image: string;
+}
+
 export const MallCard: React.FC<MallCardProps> = ({ id, name, city, district, image }) => {
   const nursingRoomMap: Record<string, string> = {
     "현대백화점 판교점": "7층 유아휴게실",

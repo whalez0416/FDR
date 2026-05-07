@@ -1,17 +1,26 @@
 import { SearchBar } from '@/components/search/SearchBar';
 import { Suspense } from 'react';
 import { Sparkles } from 'lucide-react';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { InfiniteMallList } from '@/components/mall/InfiniteMallList';
 import { NearbyMall } from '@/components/mall/NearbyMall';
 
-export default async function Home() {
-  // Fetch initial malls from Supabase (first 10)
-  const { data: INITIAL_MALLS } = await supabase
+export default async function Home({ searchParams }: { searchParams: { q?: string } }) {
+  const q = searchParams?.q || '';
+
+  // Fetch initial malls with search filter if present
+  let query = supabase
     .from('malls')
     .select('*')
     .order('name')
     .range(0, 9);
+
+  if (q) {
+    query = query.ilike('name', `%${q}%`);
+  }
+
+  const { data: INITIAL_MALLS } = await query;
 
   return (
     <main className="min-h-screen bg-[#FDF8F4] pb-32">
@@ -37,12 +46,14 @@ export default async function Home() {
 
       {/* Mall List with Infinite Scroll */}
       <div className="px-8 mt-12 space-y-8 animate-fade-up" style={{ animationDelay: '0.4s' }}>
+        {!q && <NearbyMall malls={INITIAL_MALLS || []} />}
+
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-[#2D241E]">인기 몰 & 백화점</h2>
-          <button className="text-xs font-bold text-[#FF8A5B]">전체 보기</button>
+          <h2 className="text-xl font-bold text-[#2D241E]">
+            {q ? `"${q}" 검색 결과` : '인기 몰 & 백화점'}
+          </h2>
+          {!q && <button className="text-xs font-bold text-[#FF8A5B]">전체 보기</button>}
         </div>
-        
-        <NearbyMall malls={INITIAL_MALLS || []} />
 
         <InfiniteMallList initialMalls={INITIAL_MALLS || []} />
         
