@@ -49,7 +49,14 @@ const BACKUP_DATA = {
     // The Hyundai Seoul
     {"mall_id":"97c8cc0b-c47e-4108-8c7e-c4b85229d49c","name":"호우섬","category":"아시안","floor":"B1","stroller_accessible":true,"highchair_available":true},
     {"mall_id":"97c8cc0b-c47e-4108-8c7e-c4b85229d49c","name":"삼성혈해물탕 현대백화점 더현대서울점","category":"매운탕,해물탕","floor":"B1","stroller_accessible":true,"highchair_available":true},
-    {"mall_id":"97c8cc0b-c47e-4108-8c7e-c4b85229d49c","name":"우나하우스 더현대서울","category":"카페","floor":"B1","stroller_accessible":true,"highchair_available":true}
+    {"mall_id":"97c8cc0b-c47e-4108-8c7e-c4b85229d49c","name":"우나하우스 더현대서울","category":"카페","floor":"B1","stroller_accessible":true,"highchair_available":true},
+
+    // The Hyundai Daegu
+    {"mall_id":"9451d935-e9ae-4086-aff7-463be1a8dc8b","name":"호우섬 더현대 대구점","category":"아시안","floor":"B1","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"9451d935-e9ae-4086-aff7-463be1a8dc8b","name":"게이트나인 더현대 대구점","category":"태국음식","floor":"8F","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"9451d935-e9ae-4086-aff7-463be1a8dc8b","name":"매드포갈릭 더현대 대구점","category":"양식","floor":"8F","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"9451d935-e9ae-4086-aff7-463be1a8dc8b","name":"랑만 더현대 대구점","category":"베트남음식","floor":"B1","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"9451d935-e9ae-4086-aff7-463be1a8dc8b","name":"폴바셋 더현대 대구점","category":"카페","floor":"B1","stroller_accessible":true,"highchair_available":false}
   ]
 };
 
