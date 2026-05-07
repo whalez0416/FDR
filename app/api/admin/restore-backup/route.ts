@@ -97,17 +97,34 @@ export async function GET() {
       mallNameIdMap[mall.name] = mallId;
     }
 
-    const oldMallIdToName: Record<string, string> = {};
-    malls.forEach((m: any) => { oldMallIdToName[m.id] = m.name; });
+    // 2. Prepare mapping (using ID as primary, then Name)
+    const idToIdMap: Record<string, string> = {};
+    const nameToIdMap: Record<string, string> = {};
+    
+    // Refresh malls from DB to get the latest IDs
+    const { data: dbMalls } = await supabaseAdmin.from('malls').select('id, name');
+    dbMalls?.forEach(m => {
+      nameToIdMap[m.name] = m.id;
+      // Also map simplified names if needed
+      const simpleName = m.name.replace('현대백화점 ', '');
+      if (!nameToIdMap[simpleName]) nameToIdMap[simpleName] = m.id;
+    });
 
     for (const rest of restaurants) {
-      const mallName = oldMallIdToName[rest.mall_id];
-      const newMallId = mallNameIdMap[mallName];
+      // Find the correct mall ID in the current DB
+      const backupMall = malls.find(m => m.id === rest.mall_id);
+      if (!backupMall) continue;
+
+      const newMallId = nameToIdMap[backupMall.name] || nameToIdMap[backupMall.name.replace('현대백화점 ', '')];
       if (!newMallId) continue;
 
       const { error: restError } = await supabaseAdmin.from('restaurants').upsert([{
-        mall_id: newMallId, name: rest.name, category: rest.category,
-        floor: rest.floor, status: 'OPEN', stroller_accessible: rest.stroller_accessible,
+        mall_id: newMallId, 
+        name: rest.name, 
+        category: rest.category,
+        floor: rest.floor, 
+        status: 'OPEN', 
+        stroller_accessible: rest.stroller_accessible,
         highchair_available: rest.highchair_available
       }], { onConflict: 'mall_id, name' });
 
