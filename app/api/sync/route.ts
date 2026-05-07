@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { HyundaiMallScraper, HYUNDAI_BRANCHES } from '@/lib/sync/hyundaiScraper';
 import { RestaurantService } from '@/lib/services/restaurantService';
 import { supabaseAdmin } from '@/lib/supabase/admin';
@@ -6,9 +6,23 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const scraper = new HyundaiMallScraper();
   const results = [];
+  
+  // Optional: Sync a specific branch (e.g., /api/sync?branch=판교점)
+  const targetBranch = request.nextUrl.searchParams.get('branch');
+  
+  // To avoid Vercel 10s timeout, limit to 3 top branches if no specific branch is targeted
+  let branchesToSync = HYUNDAI_BRANCHES;
+  if (targetBranch) {
+    branchesToSync = HYUNDAI_BRANCHES.filter(b => b.name.includes(targetBranch));
+  } else {
+    // Just sync The Hyundai Seoul, Apgujeong, and Pangyo as defaults to stay under 10s limit
+    branchesToSync = HYUNDAI_BRANCHES.filter(b => 
+      b.name === '더현대 서울' || b.name === '압구정본점' || b.name === '판교점'
+    );
+  }
 
   // 0. Check if Admin Key is present
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -19,8 +33,8 @@ export async function GET() {
   }
 
   try {
-    // 1. Iterate through all major branches
-    for (const branch of HYUNDAI_BRANCHES) {
+    // 1. Iterate through targeted branches
+    for (const branch of branchesToSync) {
       console.log(`National Sync: Starting ${branch.name}...`);
       
       // 2. Ensure Mall exists in DB (or get ID) using Admin client
