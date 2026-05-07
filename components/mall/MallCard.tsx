@@ -6,10 +6,17 @@ interface MallCardProps {
   name: string;
   city: string;
   district: string;
-  image: string;
-}
-
 export const MallCard: React.FC<MallCardProps> = ({ id, name, city, district, image }) => {
+  const nursingRoomMap: Record<string, string> = {
+    "현대백화점 판교점": "7층 유아휴게실",
+    "현대백화점 더현대서울점": "5층 유아휴게실",
+    "더현대 서울": "5층 유아휴게실",
+    "현대백화점 무역센터점": "4층 유아휴게실",
+    "현대백화점 압구정본점": "지하 1층 유아휴게실",
+  };
+  
+  const nursingInfo = nursingRoomMap[name] || "유아휴게실 완비";
+
   return (
     <Link href={`/malls/${id}`} className="block active:scale-[0.96] transition-transform duration-200">
       <div className="group relative h-64 rounded-[32px] overflow-hidden shadow-sm transition-all duration-500 hover:shadow-xl">
@@ -26,7 +33,7 @@ export const MallCard: React.FC<MallCardProps> = ({ id, name, city, district, im
 
         <div className="absolute bottom-6 left-6 text-white">
           <div className="flex gap-2 mb-2">
-            <span className="text-[10px] font-bold bg-black/40 backdrop-blur-md px-2 py-1 rounded-md border border-white/20">#유아휴게실</span>
+            <span className="text-[10px] font-bold bg-[#FF8A5B] text-white px-2 py-1 rounded-md shadow-sm">📍 {nursingInfo}</span>
             <span className="text-[10px] font-bold bg-black/40 backdrop-blur-md px-2 py-1 rounded-md border border-white/20">#프리미엄식당가</span>
           </div>
           <h3 className="text-2xl font-bold tracking-tight">{name}</h3>
