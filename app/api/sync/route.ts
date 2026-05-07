@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { HyundaiMallScraper, HYUNDAI_BRANCHES } from '@/lib/sync/hyundaiScraper';
 import { RestaurantService } from '@/lib/services/restaurantService';
-import { supabase } from '@/lib/supabase/client';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -15,8 +15,8 @@ export async function GET() {
     for (const branch of HYUNDAI_BRANCHES) {
       console.log(`National Sync: Starting ${branch.name}...`);
       
-      // 2. Ensure Mall exists in DB (or get ID)
-      let { data: mall } = await supabase
+      // 2. Ensure Mall exists in DB (or get ID) using Admin client
+      let { data: mall } = await supabaseAdmin
         .from('malls')
         .select('id')
         .eq('name', branch.name)
@@ -28,7 +28,7 @@ export async function GET() {
         if (branch.name.includes('대구')) city = '대구';
         if (branch.name.includes('김포') || branch.name.includes('송도') || branch.name.includes('판교')) city = '경기';
 
-        const { data: newMall, error: mallError } = await supabase
+        const { data: newMall, error: mallError } = await supabaseAdmin
           .from('malls')
           .insert({
             name: branch.name,

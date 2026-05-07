@@ -1,4 +1,4 @@
-import { supabase } from '../supabase/client';
+import { supabaseAdmin } from '../supabase/admin';
 import { ScrapedRestaurant } from '../sync/scraper';
 
 export class RestaurantService {
@@ -24,8 +24,8 @@ export class RestaurantService {
       last_updated: new Date().toISOString(),
     }));
 
-    // 2. Perform Batch Upsert (Conflict on mall_id + name)
-    const { error } = await supabase
+    // 2. Perform Batch Upsert (Conflict on mall_id + name) using Admin client
+    const { error } = await supabaseAdmin
       .from('restaurants')
       .upsert(formattedData, { 
         onConflict: 'mall_id,name',
@@ -39,7 +39,7 @@ export class RestaurantService {
 
     // 3. Mark restaurants NOT in scraped data as 'CLOSED' for this specific mall
     const currentNames = scrapedData.map(d => d.name);
-    const { error: closeError } = await supabase
+    const { error: closeError } = await supabaseAdmin
       .from('restaurants')
       .update({ status: 'CLOSED', last_updated: new Date().toISOString() })
       .eq('mall_id', mallId)
