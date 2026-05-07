@@ -1,4 +1,5 @@
 import React from 'react';
+import { Star, Baby, Footprints, MapPin } from 'lucide-react';
 
 interface RestaurantItemProps {
   name: string;
@@ -18,34 +19,41 @@ export const RestaurantItem: React.FC<RestaurantItemProps> = ({
   nursingDist 
 }) => {
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#F3E9E0]">
-      <div className="flex justify-between items-start">
-        <div>
-          <span className="text-[10px] text-[#FF8A5B] font-bold bg-[#FFF2ED] px-2 py-0.5 rounded-md mb-1 inline-block">
-            {category}
-          </span>
-          <h3 className="text-lg font-bold text-[#4A3728]">{name}</h3>
-          <div className="flex items-center mt-1 text-[#FFB800] text-sm">
-            <span>★ {rating}</span>
-            <span className="text-[#C4B5A9] ml-2 font-normal">(리뷰 42)</span>
+    <div className="card-premium p-5 animate-fade-up">
+      <div className="flex justify-between items-start gap-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[10px] text-[#FF8A5B] font-bold bg-[#FFF2ED] px-2.5 py-0.5 rounded-full">
+              {category}
+            </span>
+          </div>
+          <h3 className="text-xl font-bold text-[#2D241E] leading-tight mb-2">{name}</h3>
+          <div className="flex items-center gap-1 text-[#FFB800]">
+            <Star size={14} fill="currentColor" />
+            <span className="text-sm font-bold">{rating.toFixed(1)}</span>
+            <span className="text-[#C4B5A9] text-xs font-normal ml-1">리뷰 42+</span>
           </div>
         </div>
-        <div className="w-16 h-16 bg-[#F3E9E0] rounded-xl overflow-hidden">
-           <div className="w-full h-full flex items-center justify-center text-[#C4B5A9] text-[10px]">Image</div>
+        <div className="w-20 h-20 bg-[#FDF8F4] rounded-2xl overflow-hidden border border-[#F3E9E0] flex-shrink-0 relative">
+           <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-[10px] text-[#C4B5A9] font-medium uppercase tracking-wider">Image</span>
+           </div>
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-[#F9F3EE] flex items-center gap-3">
-        {/* Convenience Badges */}
-        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${stroller ? 'bg-[#E6F4EA] text-[#1E7E34]' : 'bg-[#F8F9FA] text-[#C4B5A9]'}`}>
-          <span>👶</span> 유모차 {stroller ? '가능' : '협소'}
+      <div className="mt-5 pt-4 border-t border-[#F9F3EE] flex flex-wrap items-center gap-2">
+        <div className={`badge-convenience ${stroller ? 'bg-[#E6F4EA] text-[#1E7E34]' : 'bg-[#F8F9FA] text-[#C4B5A9]'}`}>
+          <Footprints size={14} />
+          유모차 {stroller ? '가능' : '협소'}
         </div>
-        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${highchair ? 'bg-[#E6F4EA] text-[#1E7E34]' : 'bg-[#F8F9FA] text-[#C4B5A9]'}`}>
-          <span>🪑</span> 아기의자
+        <div className={`badge-convenience ${highchair ? 'bg-[#FFF9F0] text-[#B45309]' : 'bg-[#F8F9FA] text-[#C4B5A9]'}`}>
+          <Baby size={14} />
+          아기의자
         </div>
-        <div className="ml-auto text-[10px] text-[#8D7B6D] flex items-center">
-          <span className="mr-1">🍼 수유실</span>
-          <span className="font-bold text-[#FF8A5B]">{nursingDist}m</span>
+        <div className="ml-auto flex items-center gap-1.5 text-[#8D7B6D]">
+          <MapPin size={12} className="text-[#FF8A5B]" />
+          <span className="text-[11px] font-medium">수유실</span>
+          <span className="text-sm font-bold text-[#FF8A5B] tracking-tighter">{nursingDist}m</span>
         </div>
       </div>
     </div>

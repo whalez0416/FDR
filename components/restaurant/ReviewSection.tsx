@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Star, Camera, CheckCircle2, MessageSquare, Heart, AlertCircle, X, Send } from 'lucide-react';
 
 interface FactCheckOption {
   id: string;
@@ -9,22 +10,25 @@ interface FactCheckOption {
 }
 
 const FACT_CHECK_OPTIONS: FactCheckOption[] = [
-  { id: 'stroller', label: '유모차 통로', icon: '👶' },
-  { id: 'highchair', label: '아기의자', icon: '🪑' },
-  { id: 'kindness', label: '아이 배려', icon: '❤️' },
-  { id: 'space', label: '여유 공간', icon: '↔️' },
+  { id: 'stroller', label: '유모차 진입 수월', icon: '👶' },
+  { id: 'chair', label: '아기의자 넉넉함', icon: '🪑' },
+  { id: 'space', label: '좌석 간격 넓음', icon: '↔️' },
+  { id: 'nursing', label: '수유실 가까움', icon: '🍼' },
 ];
 
-export const ReviewSection: React.FC<{ restaurantId: string; initialScore: number }> = ({ restaurantId, initialScore }) => {
+export const ReviewSection: React.FC<{ restaurantId: string; initialScore: number }> = ({ 
+  restaurantId, 
+  initialScore 
+}) => {
   const [isWriting, setIsWriting] = useState(false);
-  const [rating, setRating] = useState(5);
-  const [factChecks, setFactChecks] = useState<string[]>([]);
+  const [rating, setRating] = useState(0);
   const [content, setContent] = useState('');
+  const [selectedFacts, setSelectedFacts] = useState<string[]>([]);
   const [photos, setPhotos] = useState<File[]>([]);
   const [avgScore, setAvgScore] = useState(initialScore);
 
-  const toggleFactCheck = (id: string) => {
-    setFactChecks(prev => 
+  const toggleFact = (id: string) => {
+    setSelectedFacts(prev => 
       prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
     );
   };
@@ -35,121 +39,179 @@ export const ReviewSection: React.FC<{ restaurantId: string; initialScore: numbe
     }
   };
 
-  const handleSubmit = async () => {
-    // 1. In a real app, upload photos to Supabase Storage first
-    // 2. Insert review into 'reviews' table
-    // 3. Trigger score recalculation (or do it via DB Function)
-    
-    console.log("Submitting review:", { restaurantId, rating, factChecks, content, photoCount: photos.length });
-    
-    // Simulate real-time score update (e.g., simplistic average for demo)
+  const handleSubmit = () => {
+    if (rating === 0) {
+      alert("별점을 선택해주세요!");
+      return;
+    }
+    // Update local score for demo
     const newScore = (avgScore + rating) / 2;
     setAvgScore(newScore);
-    
-    alert("리뷰가 소중하게 등록되었습니다!");
+    alert("소중한 리뷰가 등록되었습니다!");
     setIsWriting(false);
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setRating(5);
-    setFactChecks([]);
+    // Reset form
+    setRating(0);
     setContent('');
+    setSelectedFacts([]);
     setPhotos([]);
   };
 
   return (
-    <div className="mt-8 px-4 pb-12">
-      {/* Header with Average Score */}
-      <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-2xl shadow-sm border border-[#F3E9E0]">
-        <div>
-          <h2 className="text-lg font-bold text-[#4A3728]">부모님들의 리뷰</h2>
-          <p className="text-xs text-[#8D7B6D]">실제 방문객의 정보를 확인하세요</p>
+    <div className="space-y-10 animate-fade-up">
+      {/* Score Header */}
+      <div className="flex flex-col items-center text-center">
+        <div className="flex items-center gap-1.5 mb-2">
+          <Heart size={16} className="text-[#FF8A5B] fill-[#FF8A5B]" />
+          <span className="text-xs font-bold text-[#FF8A5B] tracking-widest uppercase">Parents Rating</span>
         </div>
-        <div className="text-center">
-          <span className="text-3xl font-black text-[#FF8A5B]">{avgScore.toFixed(1)}</span>
-          <div className="text-[#FFB800] text-[10px]">★★★★★</div>
+        <div className="flex items-baseline gap-1">
+          <span className="text-5xl font-black text-[#2D241E] tracking-tighter">{avgScore.toFixed(1)}</span>
+          <span className="text-xl font-bold text-[#C4B5A9]">/5.0</span>
+        </div>
+        <div className="flex gap-1 mt-3 text-[#FFB800]">
+          {[1, 2, 3, 4, 5].map((s) => (
+            <Star key={s} size={20} fill={s <= Math.round(avgScore) ? "currentColor" : "none"} />
+          ))}
         </div>
       </div>
 
       {!isWriting ? (
         <button 
           onClick={() => setIsWriting(true)}
-          className="w-full h-16 bg-[#FF8A5B] text-white rounded-2xl font-bold shadow-lg shadow-[#FF8A5B]/20 flex items-center justify-center gap-2 active:scale-95 transition-transform"
+          className="w-full btn-primary h-16 shadow-xl shadow-[#FF8A5B]/10"
         >
-          <span>✏️</span> 리뷰 작성하고 정보 공유하기
+          <MessageSquare size={20} />
+          리뷰 작성하고 꿀팁 공유하기
         </button>
       ) : (
-        <div className="bg-[#FFEFE6] p-5 rounded-3xl border border-[#FFD8C2] animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-[#4A3728]">식당은 어떠셨나요?</h3>
-            <button onClick={() => setIsWriting(false)} className="text-[#C4B5A9]">✕</button>
+        <div className="card-premium p-8 shadow-2xl shadow-[#FF8A5B]/10 animate-fade-up relative">
+          <button 
+            onClick={() => setIsWriting(false)}
+            className="absolute top-6 right-6 p-2 text-[#C4B5A9] hover:text-[#2D241E]"
+          >
+            <X size={20} />
+          </button>
+
+          <div className="flex items-center gap-3 mb-8">
+             <div className="w-12 h-12 bg-[#FFF2ED] rounded-2xl flex items-center justify-center text-[#FF8A5B]">
+               <Sparkles size={24} />
+             </div>
+             <div>
+               <h4 className="text-lg font-bold text-[#2D241E]">직접 다녀오셨나요?</h4>
+               <p className="text-xs text-[#8D7B6D]">다른 부모님들께 큰 도움이 됩니다.</p>
+             </div>
+          </div>
+
+          {/* Rating Selector */}
+          <div className="mb-8">
+            <p className="text-sm font-bold text-[#4A3728] mb-4">맛과 서비스는 어땠나요?</p>
+            <div className="flex justify-between items-center bg-[#FDF8F4] p-4 rounded-2xl border border-[#F3E9E0]">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <button 
+                  key={s} 
+                  onClick={() => setRating(s)}
+                  className={`transition-all duration-300 transform ${s <= rating ? 'scale-110' : 'scale-100'}`}
+                >
+                  <Star 
+                    size={32} 
+                    className={s <= rating ? 'text-[#FFB800] fill-[#FFB800]' : 'text-[#E5DACE]'} 
+                  />
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Fact Check Buttons */}
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            {FACT_CHECK_OPTIONS.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => toggleFactCheck(opt.id)}
-                className={`h-14 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all ${
-                  factChecks.includes(opt.id) 
-                  ? 'bg-white border-2 border-[#FF8A5B] text-[#FF8A5B] shadow-sm' 
-                  : 'bg-white/50 border border-[#F3E9E0] text-[#8D7B6D]'
-                }`}
-              >
-                <span>{opt.icon}</span> {opt.label}
-              </button>
-            ))}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <CheckCircle2 size={16} className="text-[#1E7E34]" />
+              <p className="text-sm font-bold text-[#4A3728]">육아 편의성 팩트체크</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {FACT_CHECK_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => toggleFact(option.id)}
+                  className={`flex items-center gap-2.5 p-3.5 rounded-2xl border text-sm font-medium transition-all duration-300 ${
+                    selectedFacts.includes(option.id)
+                      ? 'bg-[#E6F4EA] border-[#1E7E34] text-[#1E7E34] shadow-sm'
+                      : 'bg-white border-[#F3E9E0] text-[#8D7B6D] hover:border-[#FF8A5B]/30'
+                  }`}
+                >
+                  <span>{option.icon}</span>
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Content Input */}
-          <textarea 
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="부모님들에게 도움이 될 만한 팁을 적어주세요 (예: 유아 식기가 있어요, 의자가 깨끗해요)"
-            className="w-full h-32 bg-white rounded-xl p-3 text-sm border border-[#F3E9E0] focus:ring-2 focus:ring-[#FF8A5B] focus:outline-none mb-4"
-          />
-
-          {/* Photo Upload */}
-          <div className="mb-4">
-            <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-[#FFD8C2] rounded-xl bg-white/50 cursor-pointer hover:bg-white transition-colors">
-              <input type="file" multiple className="hidden" onChange={handlePhotoUpload} />
-              <div className="text-center">
-                <span className="text-2xl mb-1 block">📸</span>
-                <span className="text-xs text-[#8D7B6D]">내부/아기의자 사진 (최대 5장)</span>
-              </div>
-            </label>
-            {photos.length > 0 && (
-              <div className="flex gap-2 mt-2 overflow-x-auto pb-2">
-                {photos.map((p, i) => (
-                  <div key={i} className="w-12 h-12 bg-[#F3E9E0] rounded-lg flex-shrink-0" />
-                ))}
-              </div>
-            )}
+          {/* Content & Photo */}
+          <div className="space-y-4">
+            <div className="relative">
+              <textarea 
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="음식의 맛, 아이와 함께 앉기 좋았던 점 등을 들려주세요."
+                className="w-full h-32 p-5 bg-[#FDF8F4] rounded-2xl border border-[#F3E9E0] outline-none text-sm placeholder-[#C4B5A9] focus:border-[#FF8A5B] transition-all resize-none"
+              />
+            </div>
+            
+            <div className="flex flex-wrap gap-3">
+              <label className="w-20 h-20 bg-white border-2 border-dashed border-[#F3E9E0] rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-[#FF8A5B] transition-all group">
+                <Camera size={20} className="text-[#C4B5A9] group-hover:text-[#FF8A5B] mb-1" />
+                <span className="text-[10px] font-bold text-[#C4B5A9] group-hover:text-[#FF8A5B]">사진 추가</span>
+                <input type="file" multiple className="hidden" onChange={handlePhotoUpload} />
+              </label>
+              {photos.map((_, i) => (
+                <div key={i} className="w-20 h-20 bg-[#FDF8F4] rounded-2xl border border-[#F3E9E0] animate-fade-up flex items-center justify-center">
+                   <Star size={12} className="text-[#F3E9E0]" />
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Submit Button */}
           <button 
             onClick={handleSubmit}
-            className="w-full h-14 bg-[#4A3728] text-white rounded-xl font-bold active:scale-95 transition-transform"
+            className="w-full mt-8 btn-primary"
           >
+            <Send size={18} />
             리뷰 등록하기
           </button>
+          
+          <div className="mt-6 flex items-center justify-center gap-1.5 text-[#C4B5A9]">
+             <AlertCircle size={12} />
+             <span className="text-[10px] font-medium">허위 리뷰 작성 시 이용이 제한될 수 있습니다.</span>
+          </div>
         </div>
       )}
 
       {/* Existing Reviews List (Mock) */}
-      <div className="mt-8 space-y-4">
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#F3E9E0]">
-          <div className="flex items-center mb-2">
-            <div className="w-8 h-8 bg-[#FFD8C2] rounded-full mr-2" />
-            <span className="text-sm font-bold text-[#4A3728]">지안맘</span>
+      <div className="mt-12 space-y-6">
+        <h5 className="text-sm font-bold text-[#2D241E] flex items-center gap-2">
+          최근 작성된 리뷰 <span className="text-[#FF8A5B]">12</span>
+        </h5>
+        <div className="card-premium p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#FFD8C2] rounded-full flex items-center justify-center text-[#FF8A5B] font-bold text-xs">
+                JM
+              </div>
+              <div>
+                <span className="text-sm font-bold text-[#2D241E]">지안맘</span>
+                <p className="text-[10px] text-[#C4B5A9]">2024.05.06</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-0.5 text-[#FFB800]">
+               <Star size={12} fill="currentColor" />
+               <span className="text-xs font-bold">5.0</span>
+            </div>
           </div>
-          <p className="text-sm text-[#8D7B6D]">유모차 통로가 넓어서 너무 편했어요! 아기의자도 넉넉합니다.</p>
-          <div className="flex gap-2 mt-3">
-             <div className="px-2 py-1 bg-[#F9F3EE] rounded-md text-[10px] text-[#FF8A5B]">#유모차통로</div>
-             <div className="px-2 py-1 bg-[#F9F3EE] rounded-md text-[10px] text-[#FF8A5B]">#아기의자</div>
+          <p className="text-sm text-[#4A3728] leading-relaxed">
+            텍사스 로드하우스는 항상 믿고 가요! 유모차 통로가 넓어서 너무 편했고, 서버분들도 아이를 너무 예뻐해주셔서 기분 좋은 식사였습니다.
+          </p>
+          <div className="flex gap-2 mt-4">
+             <div className="px-2.5 py-1 bg-[#E6F4EA] rounded-lg text-[10px] text-[#1E7E34] font-bold">#유모차통로</div>
+             <div className="px-2.5 py-1 bg-[#FFF9F0] rounded-lg text-[10px] text-[#B45309] font-bold">#아기의자</div>
           </div>
         </div>
       </div>
