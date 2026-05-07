@@ -14,7 +14,14 @@ export default function MallDetail({ params }: { params: { id: string } }) {
   const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
   const [activeFloor, setActiveFloor] = useState<string>('');
 
+  const [savedIds, setSavedIds] = useState<string[]>([]);
+
   useEffect(() => {
+    const saved = localStorage.getItem('fdr_saved');
+    if (saved) {
+      setSavedIds(JSON.parse(saved));
+    }
+    
     async function fetchData() {
       const { data: mallData } = await supabase
         .from('malls')
@@ -32,6 +39,15 @@ export default function MallDetail({ params }: { params: { id: string } }) {
     }
     fetchData();
   }, [params.id]);
+
+  const toggleSave = (id: string) => {
+    setSavedIds(prev => {
+      const isSaved = prev.includes(id);
+      const newSaved = isSaved ? prev.filter(x => x !== id) : [...prev, id];
+      localStorage.setItem('fdr_saved', JSON.stringify(newSaved));
+      return newSaved;
+    });
+  };
 
   const mallName = mall?.name || "백화점 정보 로딩 중...";
   
@@ -179,8 +195,17 @@ export default function MallDetail({ params }: { params: { id: string } }) {
                   </div>
                </div>
                <div className="flex gap-3 pt-4">
-                  <button className="flex-1 bg-[#2D241E] text-white h-14 rounded-2xl font-bold active:scale-95 flex items-center justify-center gap-2"><Phone size={18} /> 전화 문의하기</button>
-                  <button className="w-14 h-14 border border-[#F3E9E0] rounded-2xl flex items-center justify-center active:scale-95"><Heart size={20} /></button>
+                  <button className="flex-1 bg-[#2D241E] text-white h-14 rounded-2xl font-bold active:scale-95 flex items-center justify-center gap-2 transition-transform"><Phone size={18} /> 전화 문의하기</button>
+                  <button 
+                    onClick={() => toggleSave(selectedRestaurant.id)}
+                    className={`w-14 h-14 rounded-2xl flex items-center justify-center active:scale-95 transition-all ${
+                      savedIds.includes(selectedRestaurant.id) 
+                        ? 'bg-[#FFEFE6] border border-[#FF8A5B] text-[#FF8A5B]' 
+                        : 'bg-white border border-[#F3E9E0] text-[#8D7B6D]'
+                    }`}
+                  >
+                    <Heart size={20} className={savedIds.includes(selectedRestaurant.id) ? 'fill-current' : ''} />
+                  </button>
                </div>
             </div>
           </div>
