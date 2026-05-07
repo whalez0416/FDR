@@ -47,7 +47,22 @@ export default async function Home() {
         <InfiniteMallList initialMalls={INITIAL_MALLS || []} />
         
         {(!INITIAL_MALLS || INITIAL_MALLS.length === 0) && (
-          <p className="text-center text-[#8D7B6D] py-10">등록된 몰 정보가 없습니다.</p>
+          <div className="py-20 text-center space-y-6">
+            <div className="w-20 h-20 bg-[#FFEFE6] rounded-full flex items-center justify-center mx-auto mb-4">
+              <Sparkles size={40} className="text-[#FF8A5B]" />
+            </div>
+            <h3 className="text-xl font-bold text-[#2D241E]">아직 데이터가 없네요!</h3>
+            <p className="text-[#8D7B6D] text-sm leading-relaxed">
+              준비된 고퀄리티 샘플 데이터(백화점 20곳, 식당 수백 개)를<br />
+              한 번에 채워넣을 수 있습니다.
+            </p>
+            <Link 
+              href="/api/admin/restore-backup"
+              className="inline-flex items-center gap-2 bg-[#FF8A5B] text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-[#FF8A5B]/20 active:scale-95 transition-all"
+            >
+              데이터 1초만에 채우기 ✨
+            </Link>
+          </div>
         )}
       </div>
     </main>
