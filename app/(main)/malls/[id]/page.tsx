@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { RestaurantItem } from '../../../components/restaurant/RestaurantItem';
-import { ReviewSection } from '../../../components/restaurant/ReviewSection';
+import { RestaurantItem } from '@/components/restaurant/RestaurantItem';
+import { ReviewSection } from '@/components/restaurant/ReviewSection';
 import { ChevronLeft, Info, Map as MapIcon, Share2, Sparkles, X, Star, Baby, Footprints, MapPin, Phone, Heart } from 'lucide-react';
-import { supabase } from '../../../lib/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 
 export default function MallDetail({ params }: { params: { id: string } }) {
   const [mall, setMall] = useState<any>(null);

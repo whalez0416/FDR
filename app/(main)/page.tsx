@@ -1,8 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { Search, MapPin, Sparkles } from 'lucide-react';
-import { supabase } from '../lib/supabase/client';
-import { InfiniteMallList } from '../components/mall/InfiniteMallList';
+import { supabase } from '@/lib/supabase/client';
+import { InfiniteMallList } from '@/components/mall/InfiniteMallList';
 
 export default async function Home() {
   // Fetch initial malls from Supabase (first 10)
