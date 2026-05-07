@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { HyundaiMallScraper, HYUNDAI_BRANCHES } from '@/lib/sync/hyundaiScraper';
+import { HYUNDAI_BRANCHES } from '@/lib/sync/hyundaiScraper';
+import { KakaoPlaceService } from '@/lib/sync/kakaoScraper';
 import { RestaurantService } from '@/lib/services/restaurantService';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
@@ -7,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
-  const scraper = new HyundaiMallScraper();
+  const scraper = new KakaoPlaceService();
   const results = [];
   
   // Optional: Sync a specific branch (e.g., /api/sync?branch=판교점)
@@ -68,8 +69,8 @@ export async function GET(request: NextRequest) {
         mall = newMall;
       }
 
-      // 3. Scrape this branch
-      const scrapedData = await scraper.fetchByBranch(branch.name, branch.code);
+      // 3. Scrape this branch using Kakao API
+      const scrapedData = await scraper.fetchRestaurantsForMall(`현대백화점 ${branch.name}`);
       
       // 4. Batch Upsert to DB
       if (scrapedData.length > 0) {
