@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   } else {
     // Just sync The Hyundai Seoul, Apgujeong, and Pangyo as defaults to stay under 10s limit
     branchesToSync = HYUNDAI_BRANCHES.filter(b => 
-      b.name === '더현대 서울' || b.name === '압구정본점' || b.name === '판교점'
+      b.name === '더현대 서울' || b.name === '현대백화점 압구정본점' || b.name === '현대백화점 판교점'
     );
   }
 
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       }
 
       // 3. Scrape this branch using Kakao API
-      const scrapedData = await scraper.fetchRestaurantsForMall(`현대백화점 ${branch.name}`);
+      const scrapedData = await scraper.fetchRestaurantsForMall(branch.name);
       
       // 4. Batch Upsert to DB
       if (scrapedData.length > 0) {
