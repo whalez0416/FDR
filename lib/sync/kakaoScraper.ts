@@ -21,62 +21,79 @@ export class KakaoPlaceService {
     ];
 
     let allResults: ScrapedRestaurant[] = [];
+    const seenNames = new Set<string>();
 
-    for (const cat of categories) {
-      let page = 1;
-      let isEnd = false;
+    // Use multiple variations of the mall name to trick Kakao API into returning more results
+    const shortName = mallName.replace('현대백화점 ', '');
+    const searchVariations = [
+      mallName,
+      `현백 ${shortName}`,
+      `${shortName.replace('점', '')} 현백`
+    ];
 
-      while (!isEnd && page <= 3) { // Max 3 pages (45 items) per category to stay fast
-        try {
-          const queryUrl = `${this.baseUrl}?query=${encodeURIComponent(mallName)}&category_group_code=${cat.code}&page=${page}&size=15`;
-          
-          const response = await fetch(queryUrl, {
-            headers: {
-              'Authorization': `KakaoAK ${this.apiKey}`
+    for (const searchKeyword of searchVariations) {
+      for (const cat of categories) {
+        let page = 1;
+        let isEnd = false;
+
+        while (!isEnd && page <= 3) {
+          try {
+            const queryUrl = `${this.baseUrl}?query=${encodeURIComponent(searchKeyword)}&category_group_code=${cat.code}&page=${page}&size=15`;
+            
+            const response = await fetch(queryUrl, {
+              headers: {
+                'Authorization': `KakaoAK ${this.apiKey}`
+              }
+            });
+
+            if (!response.ok) break;
+
+            const data = await response.json();
+            const places = data.documents || [];
+            
+            for (const place of places) {
+              // Clean the name
+              let cleanName = place.place_name
+                .replace('현대백화점', '')
+                .replace(shortName, '')
+                .replace('판교점', '')
+                .replace('무역센터점', '')
+                .replace('압구정본점', '')
+                .replace('더현대서울', '')
+                .replace('더현대 서울', '')
+                .trim();
+              
+              if (!cleanName) cleanName = place.place_name;
+
+              // Avoid duplicates
+              if (seenNames.has(cleanName)) continue;
+              seenNames.add(cleanName);
+
+              let specificCategory = cat.label;
+              if (place.category_name) {
+                const parts = place.category_name.split('>');
+                if (parts.length > 1) specificCategory = parts[parts.length - 1].trim();
+              }
+
+              allResults.push({
+                name: cleanName,
+                category: specificCategory,
+                floor: '안내데스크 확인',
+                status: 'OPEN',
+                stroller_accessible: true,
+                highchair_available: true,
+                description: `전화번호: ${place.phone || '없음'} | 카카오맵 링크: ${place.place_url}`,
+                mall_name: mallName
+              });
             }
-          });
 
-          if (!response.ok) {
-            console.error(`Kakao API Error for ${mallName}: ${response.status}`);
+            isEnd = data.meta?.is_end || true;
+            page++;
+            await new Promise(resolve => setTimeout(resolve, 50));
+          } catch (err) {
+            console.error(`Fetch error for Kakao API:`, err);
             break;
           }
-
-          const data = await response.json();
-          const places = data.documents || [];
-          
-          for (const place of places) {
-            // Only add if the place name actually contains the mall name or is located in the mall
-            // Kakao usually filters well, but just in case.
-            
-            // Extract detailed category (e.g. "음식점 > 양식 > 이탈리안" -> "이탈리안")
-            let specificCategory = cat.label;
-            if (place.category_name) {
-              const parts = place.category_name.split('>');
-              if (parts.length > 1) {
-                specificCategory = parts[parts.length - 1].trim();
-              }
-            }
-
-            allResults.push({
-              name: place.place_name.replace(mallName, '').trim() || place.place_name,
-              category: specificCategory,
-              floor: '안내데스크 확인', // Kakao API doesn't provide floor info easily
-              status: 'OPEN',
-              stroller_accessible: true, // Default to true for large malls
-              highchair_available: true, // Default to true for large malls
-              description: `전화번호: ${place.phone || '없음'} | 카카오맵 링크: ${place.place_url}`,
-              mall_name: mallName
-            });
-          }
-
-          isEnd = data.meta?.is_end || true;
-          page++;
-          
-          // Polite delay
-          await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (err) {
-          console.error(`Fetch error for Kakao API:`, err);
-          break;
         }
       }
     }
