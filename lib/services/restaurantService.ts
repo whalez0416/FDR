@@ -1,5 +1,5 @@
-import { supabase } from '@/lib/supabase/client';
-import { ScrapedRestaurant } from '@/lib/sync/scraper';
+import { supabase } from '../supabase/client';
+import { ScrapedRestaurant } from '../sync/scraper';
 
 export class RestaurantService {
   /**

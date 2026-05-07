@@ -1,5 +1,5 @@
 import React from 'react';
-import { MallCard } from '@/components/mall/MallCard';
+import { MallCard } from '../components/mall/MallCard';
 
 // Mock Data for Malls
 const MALLS = [

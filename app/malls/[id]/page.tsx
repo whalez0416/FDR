@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { RestaurantItem } from '@/components/restaurant/RestaurantItem';
-import { ReviewSection } from '@/components/restaurant/ReviewSection';
+import { RestaurantItem } from '../../../components/restaurant/RestaurantItem';
+import { ReviewSection } from '../../../components/restaurant/ReviewSection';
 
 // Mock Data for Restaurants
 const RESTAURANTS = [
