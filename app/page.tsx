@@ -2,15 +2,15 @@ import React from 'react';
 import { MallCard } from '../components/mall/MallCard';
 import { Search, MapPin, Sparkles } from 'lucide-react';
 
-// Mock Data for Malls
-const MALLS = [
-  { id: '1', name: '더현대 서울', city: '서울', district: '영등포구', image: 'https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&q=80&w=800' },
-  { id: '2', name: '롯데월드몰', city: '서울', district: '송파구', image: 'https://images.unsplash.com/photo-1562280963-8a5475740a10?auto=format&fit=crop&q=80&w=800' },
-  { id: '3', name: '신세계 하남 스타필드', city: '경기', district: '하남시', image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800' },
-  { id: '4', name: '현대백화점 판교점', city: '경기', district: '성남시', image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800' },
-];
+import { supabase } from '../lib/supabase/client';
 
-export default function Home() {
+export default async function Home() {
+  // Fetch real malls from Supabase
+  const { data: MALLS } = await supabase
+    .from('malls')
+    .select('*')
+    .order('name');
+
   return (
     <main className="min-h-screen bg-[#FDF8F4] pb-32">
       {/* Premium Header */}
@@ -47,16 +47,19 @@ export default function Home() {
           <button className="text-xs font-bold text-[#FF8A5B]">전체 보기</button>
         </div>
         <div className="grid grid-cols-1 gap-6">
-          {MALLS.map((mall) => (
+          {MALLS?.map((mall) => (
             <MallCard 
               key={mall.id} 
               id={mall.id}
               name={mall.name}
               city={mall.city}
               district={mall.district}
-              image={mall.image}
+              image={mall.image_url || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800'}
             />
           ))}
+          {(!MALLS || MALLS.length === 0) && (
+            <p className="text-center text-[#8D7B6D] py-10">등록된 몰 정보가 없습니다.</p>
+          )}
         </div>
       </div>
 

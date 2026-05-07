@@ -4,25 +4,31 @@ import { RestaurantItem } from '../../../components/restaurant/RestaurantItem';
 import { ReviewSection } from '../../../components/restaurant/ReviewSection';
 import { ChevronLeft, Info, Map as MapIcon, Share2, Sparkles } from 'lucide-react';
 
-// Mock Data for Restaurants
-const RESTAURANTS = [
-  { id: '101', name: '텍사스 로드하우스', category: '스테이크', floor: '9F', rating: 4.8, stroller: true, highchair: true, nursingDist: 30 },
-  { id: '102', name: 'h_541', category: '이탈리안', floor: '9F', rating: 4.5, stroller: true, highchair: true, nursingDist: 45 },
-  { id: '103', name: '정돈 프리미엄', category: '돈카츠', floor: '9F', rating: 4.7, stroller: false, highchair: true, nursingDist: 20 },
-  { id: '104', name: '공화춘', category: '중식', floor: '9F', rating: 4.2, stroller: true, highchair: true, nursingDist: 60 },
-  { id: '105', name: '이탈리(Eataly)', category: '양식', floor: '6F', stroller: true, highchair: true, nursingDist: 50, rating: 4.8 },
-  { id: '106', name: '정육면체', category: '중식', floor: 'B1', stroller: false, highchair: true, nursingDist: 120, rating: 4.5 },
-];
+import { supabase } from '../../../lib/supabase/client';
 
-export default function MallDetail({ params }: { params: { id: string } }) {
-  const mallName = "현대백화점 판교점";
+export default async function MallDetail({ params }: { params: { id: string } }) {
+  // 1. Fetch Mall Info
+  const { data: mall } = await supabase
+    .from('malls')
+    .select('*')
+    .eq('id', params.id)
+    .single();
+
+  // 2. Fetch Restaurants for this Mall
+  const { data: RESTAURANTS } = await supabase
+    .from('restaurants')
+    .select('*')
+    .eq('mall_id', params.id)
+    .order('floor');
+
+  const mallName = mall?.name || "백화점 정보 없음";
   
   // Group restaurants by floor
-  const groupedByFloor = RESTAURANTS.reduce((acc, rest) => {
+  const groupedByFloor = (RESTAURANTS || []).reduce((acc, rest) => {
     if (!acc[rest.floor]) acc[rest.floor] = [];
     acc[rest.floor].push(rest);
     return acc;
-  }, {} as Record<string, typeof RESTAURANTS>);
+  }, {} as Record<string, any[]>);
 
   const floors = Object.keys(groupedByFloor).sort().reverse();
 
@@ -79,11 +85,11 @@ export default function MallDetail({ params }: { params: { id: string } }) {
                 <RestaurantItem 
                   key={rest.id}
                   name={rest.name}
-                  category={rest.category}
-                  rating={rest.rating}
-                  stroller={rest.stroller}
-                  highchair={rest.highchair}
-                  nursingDist={rest.nursingDist}
+                  category={rest.category || '기타'}
+                  rating={4.5} // TODO: Calculate from reviews or add to DB
+                  stroller={rest.stroller_accessible}
+                  highchair={rest.highchair_available}
+                  nursingDist={rest.nursing_room_distance || 0}
                 />
               ))}
             </div>
