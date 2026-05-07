@@ -150,7 +150,18 @@ export default function MallDetail({ params }: { params: { id: string } }) {
             <div className="w-12 h-1.5 bg-[#F3E9E0] rounded-full mx-auto mb-8" />
             <div className="flex justify-between items-start mb-6">
               <div>
-                <span className="inline-block px-3 py-1 bg-[#FFEFE6] text-[#FF8A5B] text-[10px] font-bold rounded-lg mb-2">{selectedRestaurant.category}</span>
+                <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                  {(selectedRestaurant.category || '기타').split(',').map((cat: string) => (
+                    <span key={cat} className="text-[12px] text-[#FF8A5B] font-bold bg-[#FF8A5B]/10 px-2.5 py-1 rounded-md">
+                      #{cat.trim()}
+                    </span>
+                  ))}
+                  {selectedRestaurant.highchair_available && (
+                    <span className="text-[12px] text-[#FFB800] font-bold bg-[#FFB800]/10 px-2.5 py-1 rounded-md">
+                      #예스키즈존
+                    </span>
+                  )}
+                </div>
                 <h3 className="text-2xl font-bold text-[#2D241E]">{selectedRestaurant.name}</h3>
               </div>
               <div className="flex items-center gap-1 text-[#FFB800]"><Star size={20} fill="currentColor" /><span className="text-lg font-bold text-[#2D241E]">4.8</span></div>

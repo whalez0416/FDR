@@ -22,10 +22,17 @@ export const RestaurantItem: React.FC<RestaurantItemProps> = ({
     <div className="card-premium p-5 animate-fade-up active:scale-[0.98] transition-transform duration-200 cursor-pointer">
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] text-[#FF8A5B] font-bold bg-[#FFF2ED] px-2.5 py-0.5 rounded-full">
-              {category}
-            </span>
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+            {category.split(',').map(cat => (
+              <span key={cat} className="text-[11px] text-[#FF8A5B] font-bold bg-[#FF8A5B]/10 px-2 py-0.5 rounded-md">
+                #{cat.trim()}
+              </span>
+            ))}
+            {highchair && (
+              <span className="text-[11px] text-[#FFB800] font-bold bg-[#FFB800]/10 px-2 py-0.5 rounded-md">
+                #예스키즈존
+              </span>
+            )}
           </div>
           <h3 className="text-xl font-bold text-[#2D241E] leading-tight mb-2">{name}</h3>
           <div className="flex items-center gap-1 text-[#FFB800]">
