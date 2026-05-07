@@ -9,7 +9,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  transpilePackages: ['cheerio', 'parse5', 'domhandler'],
+  transpilePackages: ['cheerio', 'parse5', 'domhandler', 'undici'],
 }
 
 module.exports = nextConfig
