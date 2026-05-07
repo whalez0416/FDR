@@ -20,10 +20,12 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const { id, updates } = await request.json();
+    const { id, updates, type = 'restaurant' } = await request.json();
+    
+    const table = type === 'mall' ? 'malls' : 'restaurants';
     
     const { error } = await supabaseAdmin
-      .from('restaurants')
+      .from(table)
       .update(updates)
       .eq('id', id);
 

@@ -8,19 +8,19 @@ export const runtime = 'nodejs';
 // Pre-loaded data to avoid 'fs' issues on Vercel
 const BACKUP_DATA = {
   "malls": [
-    {"id":"1c866722-216c-498a-950a-d0795cacaf8b","name":"판교점","city":"경기","district":"분당구"},
+    {"id":"1c866722-216c-498a-950a-d0795cacaf8b","name":"현대백화점 판교점","city":"경기","district":"분당구"},
     {"id":"ddcfc92b-c0fa-4dab-8eb7-b26b895bd9ea","name":"현대백화점 판교점","city":"경기","district":"성남시 분당구"},
     {"id":"97c8cc0b-c47e-4108-8c7e-c4b85229d49c","name":"더현대 서울","city":"서울","district":"주요상권"},
-    {"id":"34d863b7-3f39-449b-baad-9422ad0c55ec","name":"무역센터점","city":"서울","district":"주요상권"},
-    {"id":"631a0f65-d8ff-4589-9a89-9273b72eb5e4","name":"압구정본점","city":"서울","district":"주요상권"},
-    {"id":"b2413f9f-5a54-439f-a139-8c41257042fd","name":"천호점","city":"서울","district":"주요상권"},
-    {"id":"6bdc1f29-4dc2-4125-ad5a-3f65595fa16d","name":"신촌점","city":"서울","district":"주요상권"},
-    {"id":"37d6f596-25d1-405a-8ead-57112af8242c","name":"미아점","city":"서울","district":"주요상권"},
-    {"id":"d95b809b-16ea-4bf0-9950-7aff727dcea3","name":"목동점","city":"서울","district":"주요상권"},
-    {"id":"0f811041-e828-4dcb-9ca1-d0596cf1d0e8","name":"중동점","city":"서울","district":"주요상권"},
-    {"id":"80160129-9555-43c7-8728-72f9c0fdc9fb","name":"킨텍스점","city":"서울","district":"주요상권"},
-    {"id":"4a22f098-1d5e-42cc-b1c9-715aafec4de0","name":"디큐브시티","city":"서울","district":"주요상권"},
-    {"id":"ae50acc1-61eb-48a8-894b-f0f3a819d4df","name":"울산점","city":"울산","district":"주요상권"},
+    {"id":"34d863b7-3f39-449b-baad-9422ad0c55ec","name":"현대백화점 무역센터점","city":"서울","district":"주요상권"},
+    {"id":"631a0f65-d8ff-4589-9a89-9273b72eb5e4","name":"현대백화점 압구정본점","city":"서울","district":"주요상권"},
+    {"id":"b2413f9f-5a54-439f-a139-8c41257042fd","name":"현대백화점 천호점","city":"서울","district":"주요상권"},
+    {"id":"6bdc1f29-4dc2-4125-ad5a-3f65595fa16d","name":"현대백화점 신촌점","city":"서울","district":"주요상권"},
+    {"id":"37d6f596-25d1-405a-8ead-57112af8242c","name":"현대백화점 미아점","city":"서울","district":"주요상권"},
+    {"id":"d95b809b-16ea-4bf0-9950-7aff727dcea3","name":"현대백화점 목동점","city":"서울","district":"주요상권"},
+    {"id":"0f811041-e828-4dcb-9ca1-d0596cf1d0e8","name":"현대백화점 중동점","city":"서울","district":"주요상권"},
+    {"id":"80160129-9555-43c7-8728-72f9c0fdc9fb","name":"현대백화점 킨텍스점","city":"서울","district":"주요상권"},
+    {"id":"4a22f098-1d5e-42cc-b1c9-715aafec4de0","name":"현대백화점 디큐브시티","city":"서울","district":"주요상권"},
+    {"id":"ae50acc1-61eb-48a8-894b-f0f3a819d4df","name":"현대백화점 울산점","city":"울산","district":"주요상권"},
     {"id":"b7e4a9e8-67a7-4d75-aae2-1612c0001a5b","name":"커넥트현대 부산","city":"서울","district":"주요상권"}
   ],
   "restaurants": [
@@ -51,16 +51,52 @@ export async function GET() {
     const mallNameIdMap: Record<string, string> = {};
 
     for (const mall of malls) {
-      const { data: existingMall } = await supabaseAdmin.from('malls').select('id').eq('name', mall.name).single();
-      let mallId = existingMall?.id;
+      // 1. First, try to find by ID to support renames
+      const { data: existingById } = await supabaseAdmin
+        .from('malls')
+        .select('id')
+        .eq('id', mall.id)
+        .single();
 
-      if (!mallId) {
-        const { data: newMall, error: mallError } = await supabaseAdmin.from('malls').insert([{
-          name: mall.name, city: mall.city, district: mall.district
-        }]).select('id').single();
-        if (mallError) { results.errors.push(mallError.message); continue; }
-        mallId = newMall.id;
-        results.mallsInserted++;
+      let mallId = existingById?.id;
+
+      if (mallId) {
+        // Update name for existing mall
+        await supabaseAdmin.from('malls').update({
+          name: mall.name,
+          city: mall.city,
+          district: mall.district
+        }).eq('id', mall.id);
+      } else {
+        // 2. If not found by ID, try searching by name to avoid duplicates if ID changed
+        const { data: existingByName } = await supabaseAdmin
+          .from('malls')
+          .select('id')
+          .eq('name', mall.name)
+          .single();
+        
+        mallId = existingByName?.id;
+
+        if (!mallId) {
+          const { data: newMall, error: mallError } = await supabaseAdmin.from('malls').insert([{
+            id: mall.id, // Try to preserve the original ID from backup
+            name: mall.name, 
+            city: mall.city, 
+            district: mall.district
+          }]).select('id').single();
+          
+          if (mallError) {
+            // Fallback: insert without explicit ID if there's a conflict
+            const { data: fallbackMall, error: fbError } = await supabaseAdmin.from('malls').insert([{
+              name: mall.name, city: mall.city, district: mall.district
+            }]).select('id').single();
+            if (fbError) { results.errors.push(fbError.message); continue; }
+            mallId = fallbackMall.id;
+          } else {
+            mallId = newMall.id;
+          }
+          results.mallsInserted++;
+        }
       }
       mallNameIdMap[mall.name] = mallId;
     }
