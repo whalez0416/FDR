@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
+// Redeploy trigger to pick up new env vars
 export const runtime = 'nodejs';
 
 // Pre-loaded data to avoid 'fs' issues on Vercel
