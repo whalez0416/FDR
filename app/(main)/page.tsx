@@ -54,28 +54,6 @@ export default async function Home() {
           <p className="text-center text-[#8D7B6D] py-10">등록된 몰 정보가 없습니다.</p>
         )}
       </div>
-
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-8 left-6 right-6 h-20 bg-[#2D241E] rounded-[32px] shadow-2xl flex items-center justify-around px-8 z-50 pointer-events-auto">
-         <Link href="/" className="flex flex-col items-center text-[#FF8A5B] transition-all hover:opacity-80 active:scale-90">
-           <div className="p-2 bg-[#FF8A5B]/10 rounded-xl mb-1">
-             <div className="w-5 h-5 bg-[#FF8A5B] rounded-sm" />
-           </div>
-           <span className="text-[10px] font-bold">홈</span>
-         </Link>
-         <button className="flex flex-col items-center text-[#8D7B6D] transition-all hover:opacity-80 active:scale-90">
-           <div className="p-2 mb-1">
-             <div className="w-5 h-5 border-2 border-[#8D7B6D] rounded-sm" />
-           </div>
-           <span className="text-[10px] font-bold">저장됨</span>
-         </button>
-         <button className="flex flex-col items-center text-[#8D7B6D] transition-all hover:opacity-80 active:scale-90">
-           <div className="p-2 mb-1">
-             <div className="w-5 h-5 border-2 border-[#8D7B6D] rounded-full" />
-           </div>
-           <span className="text-[10px] font-bold">마이</span>
-         </button>
-      </nav>
     </main>
   );
 }

@@ -25,7 +25,10 @@ export const MallCard: React.FC<MallCardProps> = ({ id, name, city, district, im
         </div>
 
         <div className="absolute bottom-6 left-6 text-white">
-          <p className="text-xs font-medium opacity-70 mb-1">{district}</p>
+          <div className="flex gap-2 mb-2">
+            <span className="text-[10px] font-bold bg-black/40 backdrop-blur-md px-2 py-1 rounded-md border border-white/20">#유아휴게실</span>
+            <span className="text-[10px] font-bold bg-black/40 backdrop-blur-md px-2 py-1 rounded-md border border-white/20">#프리미엄식당가</span>
+          </div>
           <h3 className="text-2xl font-bold tracking-tight">{name}</h3>
           <div className="mt-3 flex items-center gap-1">
              <div className="h-1 w-8 bg-[#FF8A5B] rounded-full" />
