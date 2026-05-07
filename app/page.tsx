@@ -21,11 +21,11 @@ export default async function Home() {
           <span className="text-xs font-bold text-[#FF8A5B] tracking-widest uppercase">Premium Curation</span>
         </div>
         <h1 className="text-4xl font-bold text-[#2D241E] leading-[1.1] tracking-tight animate-fade-up" style={{ animationDelay: '0.1s' }}>
-          아이와 함께하는<br />
-          <span className="text-[#FF8A5B]">즐거운 외식 시간</span>
+          아이와 함께<br />
+          <span className="text-[#FF8A5B]">맘편한 외식</span>
         </h1>
         <p className="mt-4 text-[#8D7B6D] text-base leading-relaxed animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          부모님들이 직접 검증한 몰별 맛집 정보를<br />가장 스마트하게 확인하세요.
+          백화점부터 대형 몰까지,<br />직접 검증한 아이 맞춤 맛집 가이드
         </p>
       </header>
 

@@ -89,7 +89,7 @@ export const InfiniteMallList: React.FC<InfiniteMallListProps> = ({ initialMalls
         {isLoading && (
           <div className="flex flex-col items-center gap-2">
             <Loader2 className="w-6 h-6 text-[#FF8A5B] animate-spin" />
-            <span className="text-[10px] text-[#C4B5A9] font-bold">새로운 장소 찾는 중...</span>
+            <span className="text-[10px] text-[#C4B5A9] font-bold">맘편한 맛집 찾는 중...</span>
           </div>
         )}
         {!hasMore && malls.length > 0 && (
