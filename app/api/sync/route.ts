@@ -3,6 +3,9 @@ import { HyundaiMallScraper, HYUNDAI_BRANCHES } from '@/lib/sync/hyundaiScraper'
 import { RestaurantService } from '@/lib/services/restaurantService';
 import { supabase } from '@/lib/supabase/client';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   const scraper = new HyundaiMallScraper();
   const results = [];
@@ -20,7 +23,6 @@ export async function GET() {
         .maybeSingle();
       
       if (!mall) {
-        // Simple mapping for city based on name
         let city = '서울';
         if (branch.name.includes('울산')) city = '울산';
         if (branch.name.includes('대구')) city = '대구';
@@ -44,7 +46,7 @@ export async function GET() {
         mall = newMall;
       }
 
-      // 3. Scrape this branch's all floors
+      // 3. Scrape this branch
       const scrapedData = await scraper.fetchByBranch(branch.name, branch.code);
       
       // 4. Batch Upsert to DB
@@ -54,13 +56,12 @@ export async function GET() {
         console.log(`Success: ${branch.name} synced with ${scrapedData.length} items.`);
       }
       
-      // Safety pause to avoid hitting rate limits or timeouts too quickly
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: 'National synchronization successful',
+      message: 'National sync completed without cache',
       synced_branches: results 
     });
   } catch (error: any) {
