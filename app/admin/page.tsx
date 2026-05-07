@@ -22,6 +22,8 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
 
+  const [isAIFilling, setIsAIFilling] = useState(false);
+
   useEffect(() => {
     fetch('/api/admin/data')
       .then(res => res.json())
@@ -38,6 +40,42 @@ export default function AdminDashboard() {
         setIsLoading(false);
       });
   }, []);
+
+  const handleAIFill = async () => {
+    if (!selectedMallId) return;
+    const mall = malls.find(m => m.id === selectedMallId);
+    if (!mall) return;
+
+    const currentRests = restaurants.filter(r => r.mall_id === selectedMallId);
+    
+    if (!confirm(`'${mall.name}'의 ${currentRests.length}개 식당 정보를 AI로 자동 완성하시겠습니까? 약 10초 정도 소요됩니다.`)) return;
+
+    setIsAIFilling(true);
+    try {
+      const res = await fetch('/api/admin/ai-fill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mallId: mall.id,
+          mallName: mall.name,
+          restaurants: currentRests
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('✨ AI 자동 완성이 완료되었습니다! 새로고침하여 결과를 확인하세요.');
+        window.location.reload();
+      } else {
+        alert('오류 발생: ' + (data.error || '알 수 없는 오류'));
+      }
+    } catch (error) {
+      console.error(error);
+      alert('AI 요청 중 문제가 발생했습니다.');
+    } finally {
+      setIsAIFilling(false);
+    }
+  };
 
   const handleUpdate = async (id: string, field: keyof Restaurant, value: string | boolean) => {
     // Optimistic UI update
@@ -78,21 +116,45 @@ export default function AdminDashboard() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          {/* Mall Selector */}
-          <div className="border-b border-gray-100 bg-gray-50 p-4 flex flex-wrap gap-2">
-            {malls.map(mall => (
-              <button
-                key={mall.id}
-                onClick={() => setSelectedMallId(mall.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedMallId === mall.id 
-                    ? 'bg-orange-500 text-white shadow-md' 
-                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                {mall.name}
-              </button>
-            ))}
+          {/* Mall Selector Header */}
+          <div className="border-b border-gray-100 bg-gray-50 p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-wrap gap-2">
+              {malls.map(mall => (
+                <button
+                  key={mall.id}
+                  onClick={() => setSelectedMallId(mall.id)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    selectedMallId === mall.id 
+                      ? 'bg-orange-500 text-white shadow-md' 
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  {mall.name}
+                </button>
+              ))}
+            </div>
+            
+            <button
+              onClick={handleAIFill}
+              disabled={isAIFilling || currentRestaurants.length === 0}
+              className={`flex items-center px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all ${
+                isAIFilling 
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                  : 'bg-purple-600 text-white hover:bg-purple-700 hover:shadow-md'
+              }`}
+            >
+              {isAIFilling ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  AI 분석 중...
+                </>
+              ) : (
+                '✨ AI로 층수/정보 싹 채우기'
+              )}
+            </button>
           </div>
 
           {/* Data Table */}
