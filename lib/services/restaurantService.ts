@@ -4,69 +4,50 @@ import { ScrapedRestaurant } from '../sync/scraper';
 export class RestaurantService {
   /**
    * Upserts restaurants for a specific mall.
-   * Compares scraped data with existing records to reflect changes.
+   * Efficiently handles mass updates using Supabase upsert.
    */
   static async upsertRestaurants(mallId: string, scrapedData: ScrapedRestaurant[]) {
     console.log(`Upserting ${scrapedData.length} restaurants for mall: ${mallId}`);
 
-    for (const item of scrapedData) {
-      // 1. Try to find existing restaurant by name and mall_id
-      const { data: existing } = await supabase
-        .from('restaurants')
-        .select('*')
-        .eq('mall_id', mallId)
-        .eq('name', item.name)
-        .single();
+    if (scrapedData.length === 0) return;
 
-      if (existing) {
-        // 2. If exists, check for changes
-        const hasChanged = 
-          existing.floor !== item.floor || 
-          existing.category !== item.category || 
-          existing.status !== item.status;
+    // 1. Format data for bulk upsert
+    const formattedData = scrapedData.map(item => ({
+      mall_id: mallId,
+      name: item.name,
+      category: item.category || '기타',
+      floor: item.floor,
+      status: 'OPEN',
+      stroller_accessible: item.stroller_accessible ?? true,
+      highchair_available: item.highchair_available ?? true,
+      phone: item.phone || '',
+      description: item.description || '',
+      last_updated: new Date().toISOString(),
+    }));
 
-        if (hasChanged) {
-          await supabase
-            .from('restaurants')
-            .update({
-              floor: item.floor,
-              category: item.category,
-              status: item.status,
-              last_updated: new Date().toISOString(),
-            })
-            .eq('id', existing.id);
-          console.log(`Updated: ${item.name}`);
-        } else {
-          // Just update the timestamp even if no content changed
-          await supabase
-            .from('restaurants')
-            .update({ last_updated: new Date().toISOString() })
-            .eq('id', existing.id);
-        }
-      } else {
-        // 3. If doesn't exist, insert new record
-        await supabase
-          .from('restaurants')
-          .insert({
-            mall_id: mallId,
-            name: item.name,
-            category: item.category,
-            floor: item.floor,
-            status: item.status,
-            stroller_accessible: item.stroller_accessible ?? false,
-            highchair_available: item.highchair_available ?? false,
-            last_updated: new Date().toISOString(),
-          });
-        console.log(`Inserted: ${item.name}`);
-      }
+    // 2. Perform Batch Upsert (Conflict on mall_id + name)
+    const { error } = await supabase
+      .from('restaurants')
+      .upsert(formattedData, { 
+        onConflict: 'mall_id,name',
+        ignoreDuplicates: false 
+      });
+
+    if (error) {
+      console.error(`Error during batch upsert for mall ${mallId}:`, error);
+      throw error;
     }
 
-    // 4. Mark restaurants NOT in scraped data as 'CLOSED'
-    const scrapedNames = scrapedData.map(d => d.name);
-    await supabase
+    // 3. Mark restaurants NOT in scraped data as 'CLOSED' for this specific mall
+    const currentNames = scrapedData.map(d => d.name);
+    const { error: closeError } = await supabase
       .from('restaurants')
       .update({ status: 'CLOSED', last_updated: new Date().toISOString() })
       .eq('mall_id', mallId)
-      .not('name', 'in', scrapedNames);
+      .not('name', 'in', `(${currentNames.map(n => `"${n}"`).join(',')})`);
+
+    if (closeError) {
+      console.warn(`Could not update closed status for ${mallId}:`, closeError);
+    }
   }
 }
