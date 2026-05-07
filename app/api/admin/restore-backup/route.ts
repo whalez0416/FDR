@@ -24,14 +24,32 @@ const BACKUP_DATA = {
     {"id":"b7e4a9e8-67a7-4d75-aae2-1612c0001a5b","name":"커넥트현대 부산","city":"서울","district":"주요상권"}
   ],
   "restaurants": [
-    {"mall_id":"1c866722-216c-498a-950a-d0795cacaf8b","name":"신승반점 현대백화점판교점","category":"중국요리","floor":"B1","stroller_accessible":true,"highchair_available":true},
+    // Pangyo
     {"mall_id":"1c866722-216c-498a-950a-d0795cacaf8b","name":"정돈 현대백화점판교점","category":"돈까스,우동","floor":"9F","stroller_accessible":true,"highchair_available":true},
-    {"mall_id":"97c8cc0b-c47e-4108-8c7e-c4b85229d49c","name":"호우섬","category":"아시안","floor":"B1","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"1c866722-216c-498a-950a-d0795cacaf8b","name":"신승반점 현대백화점판교점","category":"중국요리","floor":"B1","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"1c866722-216c-498a-950a-d0795cacaf8b","name":"이탈리 판교점","category":"이탈리안","floor":"B1","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"1c866722-216c-498a-950a-d0795cacaf8b","name":"H541 현대백화점판교점","category":"이탈리안","floor":"9F","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"1c866722-216c-498a-950a-d0795cacaf8b","name":"텍사스로드하우스 현대백화점판교점","category":"패밀리레스토랑","floor":"B1","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"1c866722-216c-498a-950a-d0795cacaf8b","name":"js가든 현대백화점판교점","category":"중국요리","floor":"9F","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"1c866722-216c-498a-950a-d0795cacaf8b","name":"블루보틀 판교현대카페","category":"카페","floor":"1F","stroller_accessible":true,"highchair_available":false},
+    
+    // Apgujeong
+    {"mall_id":"631a0f65-d8ff-4589-9a89-9273b72eb5e4","name":"도원스타일 현대백화점압구정본점","category":"중국요리","floor":"5F","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"631a0f65-d8ff-4589-9a89-9273b72eb5e4","name":"크리스탈제이드 압구정본점","category":"중국요리","floor":"5F","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"631a0f65-d8ff-4589-9a89-9273b72eb5e4","name":"루엘드파리 현대백화점압구정본점","category":"제과,베이커리","floor":"B1","stroller_accessible":true,"highchair_available":false},
+    {"mall_id":"631a0f65-d8ff-4589-9a89-9273b72eb5e4","name":"밀도 현대백화점압구정본점","category":"제과,베이커리","floor":"B1","stroller_accessible":true,"highchair_available":false},
+    {"mall_id":"631a0f65-d8ff-4589-9a89-9273b72eb5e4","name":"샤브카덴","category":"샤브샤브","floor":"5F","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"631a0f65-d8ff-4589-9a89-9273b72eb5e4","name":"가야식당","category":"한식","floor":"5F","stroller_accessible":false,"highchair_available":true},
+
+    // Trade Center
+    {"mall_id":"34d863b7-3f39-449b-baad-9422ad0c55ec","name":"더 이탈리안클럽 현대백화점무역센터점","category":"양식","floor":"10F","stroller_accessible":true,"highchair_available":true},
     {"mall_id":"34d863b7-3f39-449b-baad-9422ad0c55ec","name":"더라멘워 현대백화점무역센터점","category":"일본식라면","floor":"B1","stroller_accessible":true,"highchair_available":true},
     {"mall_id":"34d863b7-3f39-449b-baad-9422ad0c55ec","name":"더크다이브 현대백화점무역센터점","category":"일식","floor":"B1","stroller_accessible":true,"highchair_available":true},
-    {"mall_id":"34d863b7-3f39-449b-baad-9422ad0c55ec","name":"더 이탈리안클럽 현대백화점무역센터점","category":"양식","floor":"10F","stroller_accessible":true,"highchair_available":true},
-    {"mall_id":"631a0f65-d8ff-4589-9a89-9273b72eb5e4","name":"가야식당","category":"한식","floor":"5F","stroller_accessible":false,"highchair_available":true}
-    // ... Additional restaurants can be added or fetched via sync
+
+    // The Hyundai Seoul
+    {"mall_id":"97c8cc0b-c47e-4108-8c7e-c4b85229d49c","name":"호우섬","category":"아시안","floor":"B1","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"97c8cc0b-c47e-4108-8c7e-c4b85229d49c","name":"삼성혈해물탕 현대백화점 더현대서울점","category":"매운탕,해물탕","floor":"B1","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"97c8cc0b-c47e-4108-8c7e-c4b85229d49c","name":"우나하우스 더현대서울","category":"카페","floor":"B1","stroller_accessible":true,"highchair_available":true}
   ]
 };
 
@@ -68,7 +86,7 @@ export async function GET() {
           district: mall.district
         }).eq('id', mall.id);
       } else {
-        // 2. If not found by ID, try searching by name to avoid duplicates if ID changed
+        // 2. If not found by ID, try searching by name
         const { data: existingByName } = await supabaseAdmin
           .from('malls')
           .select('id')
@@ -79,14 +97,13 @@ export async function GET() {
 
         if (!mallId) {
           const { data: newMall, error: mallError } = await supabaseAdmin.from('malls').insert([{
-            id: mall.id, // Try to preserve the original ID from backup
+            id: mall.id,
             name: mall.name, 
             city: mall.city, 
             district: mall.district
           }]).select('id').single();
           
           if (mallError) {
-            // Fallback: insert without explicit ID if there's a conflict
             const { data: fallbackMall, error: fbError } = await supabaseAdmin.from('malls').insert([{
               name: mall.name, city: mall.city, district: mall.district
             }]).select('id').single();
