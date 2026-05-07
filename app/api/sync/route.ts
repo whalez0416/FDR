@@ -34,7 +34,7 @@ export async function GET() {
             name: branch.name,
             city,
             district: branch.name.includes('판교') ? '분당구' : '주요상권',
-            image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1000&auto=format&fit=crop'
+            image_url: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1000&auto=format&fit=crop'
           })
           .select()
           .single();

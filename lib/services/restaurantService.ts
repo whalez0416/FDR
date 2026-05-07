@@ -20,7 +20,6 @@ export class RestaurantService {
       status: 'OPEN',
       stroller_accessible: item.stroller_accessible ?? true,
       highchair_available: item.highchair_available ?? true,
-      phone: item.phone || '',
       description: item.description || '',
       last_updated: new Date().toISOString(),
     }));
