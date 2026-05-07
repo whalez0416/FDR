@@ -36,12 +36,12 @@ export default async function MallDetail({ params }: { params: { id: string } })
     <main className="min-h-screen bg-[#FDF8F4] pb-20">
       {/* Sticky Top Header */}
       <div className="sticky top-0 z-30 glass-effect px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="p-2 -ml-2 text-[#2D241E]">
+        <Link href="/" className="p-2 -ml-2 text-[#2D241E] active:scale-90 transition-transform">
           <ChevronLeft size={24} />
         </Link>
         <h1 className="text-lg font-bold text-[#2D241E] truncate max-w-[200px]">{mallName}</h1>
         <div className="flex items-center gap-2">
-           <button className="p-2 text-[#2D241E]"><Share2 size={20} /></button>
+           <button className="p-2 text-[#2D241E] active:scale-90 transition-transform"><Share2 size={20} /></button>
         </div>
       </div>
 
@@ -60,11 +60,11 @@ export default async function MallDetail({ params }: { params: { id: string } })
         </p>
         
         <div className="flex gap-3">
-           <button className="flex-1 btn-primary text-sm py-3.5">
+           <button className="flex-1 btn-primary text-sm py-3.5 active:scale-[0.98] transition-transform">
              <MapIcon size={16} />
              몰 지도 보기
            </button>
-           <button className="w-14 h-14 bg-white rounded-2xl border border-[#F3E9E0] flex items-center justify-center text-[#8D7B6D]">
+           <button className="w-14 h-14 bg-white rounded-2xl border border-[#F3E9E0] flex items-center justify-center text-[#8D7B6D] active:scale-95 transition-transform">
              <Info size={20} />
            </button>
         </div>

@@ -11,8 +11,8 @@ interface MallCardProps {
 
 export const MallCard: React.FC<MallCardProps> = ({ id, name, city, district, image }) => {
   return (
-    <Link href={`/malls/${id}`}>
-      <div className="group relative h-64 rounded-[32px] overflow-hidden shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-1 active:scale-[0.98]">
+    <Link href={`/malls/${id}`} className="block active:scale-[0.96] transition-transform duration-200">
+      <div className="group relative h-64 rounded-[32px] overflow-hidden shadow-sm transition-all duration-500 hover:shadow-xl">
         <img 
           src={image} 
           alt={name} 

@@ -19,7 +19,7 @@ export const RestaurantItem: React.FC<RestaurantItemProps> = ({
   nursingDist 
 }) => {
   return (
-    <div className="card-premium p-5 animate-fade-up">
+    <div className="card-premium p-5 animate-fade-up active:scale-[0.98] transition-transform duration-200 cursor-pointer">
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1.5">

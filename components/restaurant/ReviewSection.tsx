@@ -110,7 +110,7 @@ export const ReviewSection: React.FC<{ restaurantId: string; initialScore: numbe
                 <button 
                   key={s} 
                   onClick={() => setRating(s)}
-                  className={`transition-all duration-300 transform ${s <= rating ? 'scale-110' : 'scale-100'}`}
+                  className={`transition-all duration-300 transform active:scale-90 ${s <= rating ? 'scale-110' : 'scale-100'}`}
                 >
                   <Star 
                     size={32} 
@@ -132,7 +132,7 @@ export const ReviewSection: React.FC<{ restaurantId: string; initialScore: numbe
                 <button
                   key={option.id}
                   onClick={() => toggleFact(option.id)}
-                  className={`flex items-center gap-2.5 p-3.5 rounded-2xl border text-sm font-medium transition-all duration-300 ${
+                  className={`flex items-center gap-2.5 p-3.5 rounded-2xl border text-sm font-medium transition-all duration-300 active:scale-95 ${
                     selectedFacts.includes(option.id)
                       ? 'bg-[#E6F4EA] border-[#1E7E34] text-[#1E7E34] shadow-sm'
                       : 'bg-white border-[#F3E9E0] text-[#8D7B6D] hover:border-[#FF8A5B]/30'
@@ -172,7 +172,7 @@ export const ReviewSection: React.FC<{ restaurantId: string; initialScore: numbe
 
           <button 
             onClick={handleSubmit}
-            className="w-full mt-8 btn-primary"
+            className="w-full mt-8 btn-primary active:scale-[0.98] transition-transform duration-200"
           >
             <Send size={18} />
             리뷰 등록하기
