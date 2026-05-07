@@ -38,10 +38,27 @@ export class HyundaiMallScraper extends BaseScraper {
     for (const cat of categories) {
       try {
         const url = `${baseUrl}&diningGubn=${cat.id}`;
-        const response = await fetch(url);
-        if (!response.ok) continue;
+        console.log(`[Scraper] Fetching ${branchName} - ${cat.label}...`);
+        
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://www.ehyundai.com/',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8'
+          }
+        });
+
+        if (!response.ok) {
+          console.error(`[Scraper] HTTP Error ${response.status} for ${branchName}`);
+          continue;
+        }
         
         const html = await response.text();
+        if (html.includes('보안') || html.includes('접속이 제한')) {
+          console.warn(`[Scraper] Security Blocked for ${branchName}`);
+          continue;
+        }
+
         const $ = load(html);
 
         $('.dining-list li, .store-list li').each((_, element) => {
