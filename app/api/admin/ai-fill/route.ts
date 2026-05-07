@@ -27,31 +27,30 @@ export async function POST(request: Request) {
     const restaurantNames = restaurants.map((r: any) => r.name).join(', ');
 
     const prompt = `
-You are an expert on Korean Department Stores and Malls.
+You are an expert on Korean Department Stores and Malls. 
 I will give you a mall name and a list of restaurants inside it.
 Your job is to provide the floor number (e.g., "B1", "1F", "9F") and whether they likely have highchairs (true/false) and stroller accessibility (true/false).
-Usually, department store food courts are on B1 (stroller accessible, highchairs available), and premium dining is on higher floors like 9F (also accessible, has highchairs).
-Cafe kiosks might not have highchairs.
-If you don't know the exact floor, make an educated guess based on the brand (e.g., '푸드코트', '베이커리' -> B1, '전문식당가' -> 9F/10F).
 
 Mall: ${mallName}
 Restaurants: ${restaurantNames}
 
-Respond ONLY with a valid JSON array matching this exact schema:
-[
-  {
-    "name": "Restaurant Name",
-    "floor": "Floor (e.g. B1, 9F)",
-    "stroller_accessible": boolean,
-    "highchair_available": boolean
-  }
-]
+Respond with a JSON object containing a "data" key which is an array of objects:
+{
+  "data": [
+    {
+      "name": "Restaurant Name",
+      "floor": "Floor (e.g. B1, 9F)",
+      "stroller_accessible": boolean,
+      "highchair_available": boolean
+    }
+  ]
+}
 `;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Using mini for speed and cost efficiency
+      model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" } // Enforce JSON
+      response_format: { type: "json_object" }
     });
 
     let aiResponse = completion.choices[0].message.content || '[]';
