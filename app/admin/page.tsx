@@ -110,9 +110,24 @@ export default function AdminDashboard() {
             <h1 className="text-3xl font-bold text-gray-900">맘편한 외식 관리자</h1>
             <p className="text-gray-500 mt-2">식당의 층수와 편의 정보를 빠르게 수정하세요.</p>
           </div>
-          <Link href="/" className="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition">
-            앱으로 돌아가기
-          </Link>
+          <div className="flex gap-2">
+            <button 
+              onClick={async () => {
+                if(!confirm('전체 기본 데이터를 복구하시겠습니까?')) return;
+                const res = await fetch('/api/admin/restore-backup');
+                if(res.ok) {
+                  alert('데이터 복구 완료!');
+                  window.location.reload();
+                }
+              }}
+              className="px-4 py-2 bg-orange-100 text-orange-700 border border-orange-200 rounded-lg shadow-sm hover:bg-orange-200 transition text-sm font-bold"
+            >
+              🔄 기본 데이터 전체 복구
+            </button>
+            <Link href="/" className="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition text-sm">
+              앱으로 돌아가기
+            </Link>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
