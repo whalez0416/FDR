@@ -25,9 +25,10 @@ const BACKUP_DATA = {
   "restaurants": [
     {"mall_id":"1c866722-216c-498a-950a-d0795cacaf8b","name":"신승반점 현대백화점판교점","category":"중국요리","floor":"B1","stroller_accessible":true,"highchair_available":true},
     {"mall_id":"1c866722-216c-498a-950a-d0795cacaf8b","name":"정돈 현대백화점판교점","category":"돈까스,우동","floor":"9F","stroller_accessible":true,"highchair_available":true},
-    {"mall_id":"1c866722-216c-498a-950a-d0795cacaf8b","name":"이탈리 판교점","category":"이탈리안","floor":"B1","stroller_accessible":true,"highchair_available":true},
-    {"mall_id":"1c866722-216c-498a-950a-d0795cacaf8b","name":"H541 현대백화점판교점","category":"이탈리안","floor":"9F","stroller_accessible":true,"highchair_available":true},
     {"mall_id":"97c8cc0b-c47e-4108-8c7e-c4b85229d49c","name":"호우섬","category":"아시안","floor":"B1","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"34d863b7-3f39-449b-baad-9422ad0c55ec","name":"더라멘워 현대백화점무역센터점","category":"일본식라면","floor":"B1","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"34d863b7-3f39-449b-baad-9422ad0c55ec","name":"더크다이브 현대백화점무역센터점","category":"일식","floor":"B1","stroller_accessible":true,"highchair_available":true},
+    {"mall_id":"34d863b7-3f39-449b-baad-9422ad0c55ec","name":"더 이탈리안클럽 현대백화점무역센터점","category":"양식","floor":"10F","stroller_accessible":true,"highchair_available":true},
     {"mall_id":"631a0f65-d8ff-4589-9a89-9273b72eb5e4","name":"가야식당","category":"한식","floor":"5F","stroller_accessible":false,"highchair_available":true}
     // ... Additional restaurants can be added or fetched via sync
   ]
@@ -37,6 +38,13 @@ export async function GET() {
   try {
     const { malls, restaurants } = BACKUP_DATA;
     const results = { mallsInserted: 0, restaurantsInserted: 0, errors: [] as string[] };
+
+    // 0. Cleanup: Remove Trade Center restaurants wrongly attached to The Hyundai Seoul
+    await supabaseAdmin
+      .from('restaurants')
+      .delete()
+      .eq('mall_id', '97c8cc0b-c47e-4108-8c7e-c4b85229d49c') // The Hyundai Seoul
+      .ilike('name', '%무역센터점%');
 
     // Restore logic
     const mallNameIdMap: Record<string, string> = {};
