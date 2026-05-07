@@ -1,4 +1,4 @@
-import { Restaurant } from '@/types';
+// No imports needed for basic interfaces
 
 /**
  * Interface for Mall Scrapers
@@ -28,6 +28,7 @@ export interface ScrapedRestaurant {
   // Parenthood data might need manual verification or separate source
   stroller_accessible?: boolean;
   highchair_available?: boolean;
+  description?: string;
 }
 
 /**
