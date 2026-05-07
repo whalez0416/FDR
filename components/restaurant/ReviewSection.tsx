@@ -57,7 +57,7 @@ export const ReviewSection: React.FC<{ restaurantId: string; initialScore: numbe
   };
 
   return (
-    <div className="space-y-10 animate-fade-up">
+    <div className="space-y-10 pointer-events-auto">
       {/* Score Header */}
       <div className="flex flex-col items-center text-center">
         <div className="flex items-center gap-1.5 mb-2">
