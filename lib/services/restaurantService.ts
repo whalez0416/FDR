@@ -67,6 +67,6 @@ export class RestaurantService {
       .from('restaurants')
       .update({ status: 'CLOSED', last_updated: new Date().toISOString() })
       .eq('mall_id', mallId)
-      .not('name', 'in', `(${scrapedNames.map(n => `"${n}"`).join(',')})`);
+      .not('name', 'in', scrapedNames);
   }
 }

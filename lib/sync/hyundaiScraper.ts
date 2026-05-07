@@ -1,4 +1,4 @@
-import * as cheerio from 'cheerio';
+import { load } from 'cheerio';
 import { BaseScraper, ScrapedRestaurant } from './scraper';
 
 export class HyundaiPangyoScraper extends BaseScraper {
@@ -15,7 +15,7 @@ export class HyundaiPangyoScraper extends BaseScraper {
     try {
       const response = await fetch(this.baseUrl);
       const html = await response.text();
-      const $ = cheerio.load(html);
+      const $ = load(html);
       const results: ScrapedRestaurant[] = [];
 
       // Selector for restaurant items (hypothetical based on common Hyundai Mall structure)
@@ -68,12 +68,13 @@ export class HyundaiPangyoScraper extends BaseScraper {
   /**
    * Helper to normalize floor strings (e.g., "5층" -> "5F", "지하 1층" -> "B1")
    */
-  private formatFloor(floor: string): string {
+  private formatFloor(floor: string | undefined): string {
+    if (!floor) return '1F';
     if (floor.includes('지하')) {
       const num = floor.replace(/[^0-9]/g, '');
-      return `B${num}`;
+      return `B${num || '1'}`;
     }
     const num = floor.replace(/[^0-9]/g, '');
-    return `${num}F`;
+    return `${num || '1'}F`;
   }
 }
