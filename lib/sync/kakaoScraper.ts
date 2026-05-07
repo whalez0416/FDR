@@ -9,27 +9,37 @@ export class KakaoPlaceService {
     this.apiKey = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY || process.env.KAKAO_REST_API_KEY || '';
   }
 
-  async fetchRestaurantsForMall(mallName: string): Promise<ScrapedRestaurant[]> {
+  async fetchRestaurantsForMall(mallName: string, targetCategory?: string): Promise<ScrapedRestaurant[]> {
     if (!this.apiKey) {
       console.warn('Kakao REST API Key is missing. Returning empty array.');
       return [];
     }
 
-    const categories = [
-      { code: 'FD6', label: '음식점' }, // Food
-      { code: 'CE7', label: '카페' }    // Cafe
+    let categories = [
+      { code: 'FD6', label: '음식점' },
+      { code: 'CE7', label: '카페' }
     ];
+
+    if (targetCategory && ['카페', '베이커리', '디저트', '커피'].includes(targetCategory)) {
+       categories = [{ code: 'CE7', label: '카페' }];
+    } else if (targetCategory) {
+       categories = [{ code: 'FD6', label: '음식점' }];
+    }
 
     let allResults: ScrapedRestaurant[] = [];
     const seenNames = new Set<string>();
 
-    // Use multiple variations of the mall name to trick Kakao API into returning more results
     const shortName = mallName.replace('현대백화점 ', '');
-    const searchVariations = [
+    const baseVariations = [
       mallName,
       `현백 ${shortName}`,
       `${shortName.replace('점', '')} 현백`
     ];
+
+    // If targetCategory is provided, append it to the search keyword (e.g., "판교점 한식")
+    const searchVariations = targetCategory 
+      ? baseVariations.map(v => `${v} ${targetCategory}`)
+      : baseVariations;
 
     for (const searchKeyword of searchVariations) {
       for (const cat of categories) {
