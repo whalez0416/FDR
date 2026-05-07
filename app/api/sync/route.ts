@@ -10,6 +10,14 @@ export async function GET() {
   const scraper = new HyundaiMallScraper();
   const results = [];
 
+  // 0. Check if Admin Key is present
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json({ 
+      success: false, 
+      error: 'SUPABASE_SERVICE_ROLE_KEY is missing in environment variables. Please add it to Vercel settings.' 
+    }, { status: 401 });
+  }
+
   try {
     // 1. Iterate through all major branches
     for (const branch of HYUNDAI_BRANCHES) {
