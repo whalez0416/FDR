@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Search, MapPin, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { InfiniteMallList } from '@/components/mall/InfiniteMallList';
+import { NearbyMall } from '@/components/mall/NearbyMall';
 
 export default async function Home() {
   // Fetch initial malls from Supabase (first 10)
@@ -48,6 +49,8 @@ export default async function Home() {
           <button className="text-xs font-bold text-[#FF8A5B]">전체 보기</button>
         </div>
         
+        <NearbyMall malls={INITIAL_MALLS || []} />
+
         <InfiniteMallList initialMalls={INITIAL_MALLS || []} />
         
         {(!INITIAL_MALLS || INITIAL_MALLS.length === 0) && (
