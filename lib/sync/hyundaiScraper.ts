@@ -4,77 +4,63 @@ import { BaseScraper, ScrapedRestaurant } from './scraper';
 export class HyundaiPangyoScraper extends BaseScraper {
   mallName = '현대백화점 판교점';
   // Pangyo Branch Code: B00148000
-  baseUrl = 'https://www.ehyundai.com/newGP/SD/SD000001.do?branchCd=B00148000';
+  baseUrl = 'https://www.ehyundai.com/newPotal/DP/DP000000_V.do?branchCd=B00148000';
 
-  /**
-   * Fetches the restaurant list from Hyundai Pangyo website.
-   * Note: In a production environment, you might need a proxy or a real browser (Playwright) 
-   * if the site uses heavy JS rendering.
-   */
   async fetchRestaurants(): Promise<ScrapedRestaurant[]> {
-    try {
-      const response = await fetch(this.baseUrl);
-      const html = await response.text();
-      const $ = load(html);
-      const results: ScrapedRestaurant[] = [];
+    // Categories split by Hyundai's site structure
+    const categories = [
+      { id: 'B0670100', label: '전문식당가' },
+      { id: 'B0670200', label: '푸드코트' },
+      { id: 'B0670300', label: '카페' },
+      { id: 'B0670400', label: '베이커리' }
+    ];
 
-      // Selector for restaurant items (hypothetical based on common Hyundai Mall structure)
-      // Actual selector would need to be verified against the live site.
-      $('.restaurant-list-item, .store-info').each((_, element) => {
-        const rawData = {
-          name: $(element).find('.name, .title').text().trim(),
-          category: $(element).find('.category, .type').text().trim(),
-          floor: $(element).find('.floor').text().trim(),
-          description: $(element).find('.desc, .info-text').text().trim(),
-          phone: $(element).find('.phone, .tel').text().trim(),
-        };
+    const allResults: ScrapedRestaurant[] = [];
 
-        if (rawData.name) {
-          results.push(this.transform(rawData));
-        }
-      });
+    for (const cat of categories) {
+      try {
+        const url = `${this.baseUrl}&diningGubn=${cat.id}`;
+        console.log(`Scraping ${cat.label} at Pangyo...`);
+        
+        const response = await fetch(url);
+        const html = await response.text();
+        const $ = load(html);
 
-      return results;
-    } catch (error) {
-      console.error(`Error scraping ${this.mallName}:`, error);
-      return [];
+        // Selecting restaurant items based on Hyundai's HTML structure
+        $('.dining-list li, .store-list li').each((_, element) => {
+          const name = $(element).find('.name, .tit').text().trim();
+          // Position/Floor is usually in a <dd> or next to a label
+          const floorRaw = $(element).find('.floor, .loc, dt:contains("위치") + dd').text().trim();
+          const phone = $(element).find('.tel, dt:contains("전화번호") + dd').text().trim();
+          const description = $(element).find('.desc, .info-text, .txt').text().trim();
+
+          if (name) {
+            allResults.push({
+              name,
+              category: cat.label,
+              floor: this.formatFloor(floorRaw),
+              status: 'OPEN',
+              stroller_accessible: true, // Malls are generally accessible
+              highchair_available: true,
+              description,
+              phone
+            });
+          }
+        });
+      } catch (error) {
+        console.error(`Error scraping category ${cat.label}:`, error);
+      }
     }
+
+    console.log(`Total restaurants found at Pangyo: ${allResults.length}`);
+    return allResults;
   }
 
-  /**
-   * Transforms raw scraped data into our ScrapedRestaurant format
-   * and performs keyword analysis for parenting convenience.
-   */
-  transform(data: any): ScrapedRestaurant {
-    const description = data.description || '';
-    
-    // Keyword matching for parenting filters
-    const isStrollerFriendly = /유모차|진입|광장|유모차 진입/i.test(description);
-    const nearNursingRoom = /유아휴게실|수유실|아기쉼터|인접/i.test(description);
-    const hasHighchair = /아기의자|하이체어|베이비체어/i.test(description);
-
-    return {
-      name: data.name,
-      category: data.category || '기타',
-      floor: this.formatFloor(data.floor),
-      status: 'OPEN', // Default to OPEN if found on site
-      stroller_accessible: isStrollerFriendly,
-      highchair_available: hasHighchair,
-      // Note: nursing_room_distance might need mapping against mall map data
-      description: description,
-    };
-  }
-
-  /**
-   * Helper to normalize floor strings (e.g., "5층" -> "5F", "지하 1층" -> "B1")
-   */
   private formatFloor(floor: string | undefined): string {
     if (!floor) return '1F';
-    if (floor.includes('지하')) {
-      const num = floor.replace(/[^0-9]/g, '');
-      return `B${num || '1'}`;
-    }
-    const num = floor.replace(/[^0-9]/g, '');
-    return `${num || '1'}F`;
+    // Normalize: "지하1층" -> "B1", "9층" -> "9F"
+    let f = floor.replace(/층/g, '').replace(/지하/g, 'B').trim();
+    if (!f.startsWith('B') && !f.endsWith('F')) f = f + 'F';
+    return f.toUpperCase();
   }
 }
