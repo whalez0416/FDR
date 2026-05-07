@@ -1,6 +1,6 @@
-import React from 'react';
-import Link from 'next/link';
-import { Search, MapPin, Sparkles } from 'lucide-react';
+import { SearchBar } from '@/components/search/SearchBar';
+import { Suspense } from 'react';
+import { Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { InfiniteMallList } from '@/components/mall/InfiniteMallList';
 import { NearbyMall } from '@/components/mall/NearbyMall';
@@ -31,16 +31,9 @@ export default async function Home() {
       </header>
 
       {/* Floating Search Bar (Glassmorphism) */}
-      <div className="px-6 -mt-8 sticky top-4 z-20 animate-fade-up" style={{ animationDelay: '0.3s' }}>
-        <div className="w-full h-16 bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl shadow-[#FF8A5B]/5 border border-white flex items-center px-6 transition-all focus-within:ring-2 focus-within:ring-[#FF8A5B]/20 active:scale-[0.98]">
-          <Search size={20} className="text-[#FF8A5B] mr-4" />
-          <input 
-            type="text"
-            placeholder="가고 싶은 백화점이나 몰을 찾아보세요"
-            className="bg-transparent border-none outline-none text-sm w-full text-[#4A3728] placeholder-[#C4B5A9] font-medium"
-          />
-        </div>
-      </div>
+      <Suspense fallback={<div className="px-6 -mt-8 h-16 bg-white/50 rounded-3xl animate-pulse" />}>
+        <SearchBar />
+      </Suspense>
 
       {/* Mall List with Infinite Scroll */}
       <div className="px-8 mt-12 space-y-8 animate-fade-up" style={{ animationDelay: '0.4s' }}>

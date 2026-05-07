@@ -1,59 +1,23 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Star, Camera, CheckCircle2, MessageSquare, Heart, AlertCircle, X, Send } from 'lucide-react';
+import { Star, MessageSquare, Heart } from 'lucide-react';
+import { ReviewCreateModal } from './ReviewCreateModal';
 
-interface FactCheckOption {
-  id: string;
-  label: string;
-  icon: string;
-}
-
-const FACT_CHECK_OPTIONS: FactCheckOption[] = [
-  { id: 'stroller', label: '유모차 진입 수월', icon: '👶' },
-  { id: 'chair', label: '아기의자 넉넉함', icon: '🪑' },
-  { id: 'space', label: '좌석 간격 넓음', icon: '↔️' },
-  { id: 'nursing', label: '수유실 가까움', icon: '🍼' },
-];
-
-export const ReviewSection: React.FC<{ restaurantId: string; initialScore: number }> = ({ 
+export const ReviewSection: React.FC<{ restaurantId: string; initialScore: number; restaurantName?: string }> = ({ 
   restaurantId, 
-  initialScore 
+  initialScore,
+  restaurantName = "이 식당"
 }) => {
-  const [isWriting, setIsWriting] = useState(false);
-  const [rating, setRating] = useState(0);
-  const [content, setContent] = useState('');
-  const [selectedFacts, setSelectedFacts] = useState<string[]>([]);
-  const [photos, setPhotos] = useState<File[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [avgScore, setAvgScore] = useState(initialScore);
 
-  const toggleFact = (id: string) => {
-    setSelectedFacts(prev => 
-      prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
-    );
-  };
-
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setPhotos(prev => [...prev, ...Array.from(e.target.files!)]);
-    }
-  };
-
-  const handleSubmit = () => {
-    if (rating === 0) {
-      alert("별점을 선택해주세요!");
-      return;
-    }
-    // Update local score for demo
-    const newScore = (avgScore + rating) / 2;
+  const handleReviewSubmit = (review: any) => {
+    // Mock submit success
+    const newScore = (avgScore + review.rating) / 2;
     setAvgScore(newScore);
-    alert("소중한 리뷰가 등록되었습니다!");
-    setIsWriting(false);
-    // Reset form
-    setRating(0);
-    setContent('');
-    setSelectedFacts([]);
-    setPhotos([]);
+    alert("소중한 리뷰가 등록되었습니다! ✨");
+    setIsModalOpen(false);
   };
 
   return (
@@ -75,115 +39,20 @@ export const ReviewSection: React.FC<{ restaurantId: string; initialScore: numbe
         </div>
       </div>
 
-      {!isWriting ? (
-        <button 
-          onClick={() => setIsWriting(true)}
-          className="w-full btn-primary h-16 shadow-xl shadow-[#FF8A5B]/10"
-        >
-          <MessageSquare size={20} />
-          리뷰 작성하고 꿀팁 공유하기
-        </button>
-      ) : (
-        <div className="card-premium p-8 shadow-2xl shadow-[#FF8A5B]/10 animate-fade-up relative">
-          <button 
-            onClick={() => setIsWriting(false)}
-            className="absolute top-6 right-6 p-2 text-[#C4B5A9] hover:text-[#2D241E]"
-          >
-            <X size={20} />
-          </button>
+      <button 
+        onClick={() => setIsModalOpen(true)}
+        className="w-full btn-primary h-16 shadow-xl shadow-[#FF8A5B]/10"
+      >
+        <MessageSquare size={20} />
+        리뷰 작성하고 꿀팁 공유하기
+      </button>
 
-          <div className="flex items-center gap-3 mb-8">
-             <div className="w-12 h-12 bg-[#FFF2ED] rounded-2xl flex items-center justify-center text-[#FF8A5B]">
-               <Sparkles size={24} />
-             </div>
-             <div>
-               <h4 className="text-lg font-bold text-[#2D241E]">직접 다녀오셨나요?</h4>
-               <p className="text-xs text-[#8D7B6D]">다른 부모님들께 큰 도움이 됩니다.</p>
-             </div>
-          </div>
-
-          {/* Rating Selector */}
-          <div className="mb-8">
-            <p className="text-sm font-bold text-[#4A3728] mb-4">맛과 서비스는 어땠나요?</p>
-            <div className="flex justify-between items-center bg-[#FDF8F4] p-4 rounded-2xl border border-[#F3E9E0]">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <button 
-                  key={s} 
-                  onClick={() => setRating(s)}
-                  className={`transition-all duration-300 transform active:scale-90 ${s <= rating ? 'scale-110' : 'scale-100'}`}
-                >
-                  <Star 
-                    size={32} 
-                    className={s <= rating ? 'text-[#FFB800] fill-[#FFB800]' : 'text-[#E5DACE]'} 
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Fact Check Buttons */}
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <CheckCircle2 size={16} className="text-[#1E7E34]" />
-              <p className="text-sm font-bold text-[#4A3728]">육아 편의성 팩트체크</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {FACT_CHECK_OPTIONS.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => toggleFact(option.id)}
-                  className={`flex items-center gap-2.5 p-3.5 rounded-2xl border text-sm font-medium transition-all duration-300 active:scale-95 ${
-                    selectedFacts.includes(option.id)
-                      ? 'bg-[#E6F4EA] border-[#1E7E34] text-[#1E7E34] shadow-sm'
-                      : 'bg-white border-[#F3E9E0] text-[#8D7B6D] hover:border-[#FF8A5B]/30'
-                  }`}
-                >
-                  <span>{option.icon}</span>
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Content & Photo */}
-          <div className="space-y-4">
-            <div className="relative">
-              <textarea 
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="음식의 맛, 아이와 함께 앉기 좋았던 점 등을 들려주세요."
-                className="w-full h-32 p-5 bg-[#FDF8F4] rounded-2xl border border-[#F3E9E0] outline-none text-sm placeholder-[#C4B5A9] focus:border-[#FF8A5B] transition-all resize-none"
-              />
-            </div>
-            
-            <div className="flex flex-wrap gap-3">
-              <label className="w-20 h-20 bg-white border-2 border-dashed border-[#F3E9E0] rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-[#FF8A5B] transition-all group">
-                <Camera size={20} className="text-[#C4B5A9] group-hover:text-[#FF8A5B] mb-1" />
-                <span className="text-[10px] font-bold text-[#C4B5A9] group-hover:text-[#FF8A5B]">사진 추가</span>
-                <input type="file" multiple className="hidden" onChange={handlePhotoUpload} />
-              </label>
-              {photos.map((_, i) => (
-                <div key={i} className="w-20 h-20 bg-[#FDF8F4] rounded-2xl border border-[#F3E9E0] animate-fade-up flex items-center justify-center">
-                   <Star size={12} className="text-[#F3E9E0]" />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <button 
-            onClick={handleSubmit}
-            className="w-full mt-8 btn-primary active:scale-[0.98] transition-transform duration-200"
-          >
-            <Send size={18} />
-            리뷰 등록하기
-          </button>
-          
-          <div className="mt-6 flex items-center justify-center gap-1.5 text-[#C4B5A9]">
-             <AlertCircle size={12} />
-             <span className="text-[10px] font-medium">허위 리뷰 작성 시 이용이 제한될 수 있습니다.</span>
-          </div>
-        </div>
-      )}
+      <ReviewCreateModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        restaurantName={restaurantName}
+        onSubmit={handleReviewSubmit}
+      />
 
       {/* Existing Reviews List (Mock) */}
       <div className="mt-12 space-y-6">

@@ -49,9 +49,18 @@ export default function MallDetail({ params }: { params: { id: string } }) {
     });
   };
 
+  const [selectedCategory, setSelectedCategory] = useState<string>('전체');
+
   const mallName = mall?.name || "백화점 정보 로딩 중...";
   
-  const groupedByFloor = (restaurants || []).reduce((acc, rest) => {
+  // Extract categories
+  const categories = ['전체', ...Array.from(new Set((restaurants || []).flatMap(r => (r.category || '기타').split(',').map((c: string) => c.trim()))))];
+
+  const filteredRestaurants = selectedCategory === '전체' 
+    ? restaurants 
+    : restaurants.filter(r => (r.category || '').includes(selectedCategory));
+
+  const groupedByFloor = (filteredRestaurants || []).reduce((acc, rest) => {
     if (!acc[rest.floor]) acc[rest.floor] = [];
     acc[rest.floor].push(rest);
     return acc;
@@ -106,8 +115,8 @@ export default function MallDetail({ params }: { params: { id: string } }) {
           <Sparkles size={14} className="text-[#FF8A5B]" />
           <span className="text-[10px] font-bold text-[#FF8A5B] tracking-wider uppercase">Pangyo Guide</span>
         </div>
-        <h2 className="text-3xl font-bold text-[#2D241E] leading-tight mb-4">식당가 가이드</h2>
-        <div className="flex gap-3">
+        <h2 className="text-3xl font-bold text-[#2D241E] leading-tight mb-6">식당가 가이드</h2>
+        <div className="flex gap-3 mb-8">
            <button onClick={() => setIsMapOpen(true)} className="flex-1 btn-primary text-sm py-3.5">
              <MapIcon size={16} /> 몰 지도 보기
            </button>
@@ -115,32 +124,55 @@ export default function MallDetail({ params }: { params: { id: string } }) {
              <Info size={20} />
            </button>
         </div>
+
+        {/* Category Filter */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`flex-shrink-0 px-4 py-2.5 rounded-2xl text-[13px] font-bold transition-all ${
+                selectedCategory === cat
+                  ? 'bg-[#2D241E] text-white'
+                  : 'bg-[#F3E9E0]/30 text-[#8D7B6D] hover:bg-[#F3E9E0]/50'
+              }`}
+            >
+              #{cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* List */}
       <div className="px-8 space-y-12">
-        {floors.map((floor) => (
-          <section key={floor} id={`floor-${floor}`} className="animate-fade-up scroll-mt-40">
-            <div className="flex items-center gap-3 mb-6">
-               <div className="w-10 h-10 bg-[#2D241E] text-white rounded-xl flex items-center justify-center font-bold text-sm">{floor}</div>
-               <div className="h-[1px] flex-1 bg-[#F3E9E0]" />
-            </div>
-            <div className="grid grid-cols-1 gap-5">
-              {groupedByFloor[floor].map((rest) => (
-                <div key={rest.id} onClick={() => setSelectedRestaurant(rest)}>
-                  <RestaurantItem 
-                    name={rest.name}
-                    category={rest.category || '기타'}
-                    rating={4.8}
-                    stroller={rest.stroller_accessible}
-                    highchair={rest.highchair_available}
-                    nursingDist={rest.nursing_room_distance || 0}
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
+        {floors.length > 0 ? (
+          floors.map((floor) => (
+            <section key={floor} id={`floor-${floor}`} className="animate-fade-up scroll-mt-40">
+              <div className="flex items-center gap-3 mb-6">
+                 <div className="w-10 h-10 bg-[#2D241E] text-white rounded-xl flex items-center justify-center font-bold text-sm">{floor}</div>
+                 <div className="h-[1px] flex-1 bg-[#F3E9E0]" />
+              </div>
+              <div className="grid grid-cols-1 gap-5">
+                {groupedByFloor[floor].map((rest) => (
+                  <div key={rest.id} onClick={() => setSelectedRestaurant(rest)}>
+                    <RestaurantItem 
+                      name={rest.name}
+                      category={rest.category || '기타'}
+                      rating={4.8}
+                      stroller={rest.stroller_accessible}
+                      highchair={rest.highchair_available}
+                      nursingDist={rest.nursing_room_distance || 0}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))
+        ) : (
+          <div className="py-20 text-center">
+            <p className="text-[#8D7B6D] font-medium">선택하신 카테고리의 식당이 없습니다.</p>
+          </div>
+        )}
       </div>
 
       {/* Reviews */}
