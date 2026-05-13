@@ -5,6 +5,7 @@ export type Mall = {
   district: string;
   address?: string;
   image_url: string;
+  source_url?: string;
 };
 
 export type Restaurant = {

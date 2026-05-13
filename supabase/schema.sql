@@ -8,8 +8,11 @@ CREATE TABLE malls (
     district TEXT,      -- e.g., 'Gangnam-gu', 'Hanam-si'
     address TEXT,
     image_url TEXT,
+    source_url TEXT,    -- Added for auto-sync cron
+    nursery_room_info TEXT, -- Added for parents' convenience (repurposed to district later, but keep in schema for now if desired)
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT unique_mall_name UNIQUE (name)
 );
 
 -- 2. Restaurants Table
@@ -62,3 +65,6 @@ ALTER TABLE restaurants ADD COLUMN last_updated TIMESTAMP WITH TIME ZONE DEFAULT
 
 -- Index for performance on sync
 CREATE INDEX idx_restaurants_mall_name ON restaurants(mall_id, name);
+
+-- Unique constraint for upsert
+ALTER TABLE restaurants ADD CONSTRAINT unique_mall_restaurant UNIQUE (mall_id, name);

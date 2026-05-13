@@ -41,11 +41,7 @@ export const RestaurantItem: React.FC<RestaurantItemProps> = ({
             <span className="text-[#C4B5A9] text-xs font-normal ml-1">리뷰 42+</span>
           </div>
         </div>
-        <div className="w-20 h-20 bg-[#FDF8F4] rounded-2xl overflow-hidden border border-[#F3E9E0] flex-shrink-0 relative">
-           <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-[10px] text-[#C4B5A9] font-medium uppercase tracking-wider">Image</span>
-           </div>
-        </div>
+        {/* Image removed for premium text-only design */}
       </div>
 
       <div className="mt-5 pt-4 border-t border-[#F9F3EE] flex flex-wrap items-center gap-2">

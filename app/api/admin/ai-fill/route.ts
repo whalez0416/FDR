@@ -27,9 +27,14 @@ export async function POST(request: Request) {
     const restaurantNames = restaurants.map((r: any) => r.name).join(', ');
 
     const prompt = `
-You are an expert on Korean Department Stores and Malls. 
+You are an expert on Korean Department Stores and Malls, specifically focused on child-friendly dining.
 I will give you a mall name and a list of restaurants inside it.
-Your job is to provide the floor number (e.g., "B1", "1F", "9F") and whether they likely have highchairs (true/false) and stroller accessibility (true/false).
+Your job is to provide:
+1. Floor number (e.g., "B1", "1F", "9F")
+2. Whether they have highchairs (true/false)
+3. Stroller accessibility (true/false)
+4. 3-4 child-friendly hashtags (e.g., "#유모차가능", "#아이랑가기좋은", "#조용한")
+5. A short description (1-2 sentences) highlighting why it's good for parents with kids.
 
 Mall: ${mallName}
 Restaurants: ${restaurantNames}
@@ -41,7 +46,9 @@ Respond with a JSON object containing a "data" key which is an array of objects:
       "name": "Restaurant Name",
       "floor": "Floor (e.g. B1, 9F)",
       "stroller_accessible": boolean,
-      "highchair_available": boolean
+      "highchair_available": boolean,
+      "tags": ["#tag1", "#tag2", "#tag3"],
+      "description": "Short description here"
     }
   ]
 }
@@ -53,22 +60,12 @@ Respond with a JSON object containing a "data" key which is an array of objects:
       response_format: { type: "json_object" }
     });
 
-    let aiResponse = completion.choices[0].message.content || '[]';
+    let aiResponse = completion.choices[0].message.content || '{"data": []}';
     
-    // GPT-4o-mini might wrap the array in an object when json_object is enforced if the prompt asks for an array.
-    // Let's parse it safely.
     let parsedData: any;
     try {
-      parsedData = JSON.parse(aiResponse);
-      if (!Array.isArray(parsedData)) {
-        // If it wrapped it in an object like { "restaurants": [...] }
-        const key = Object.keys(parsedData)[0];
-        if (Array.isArray(parsedData[key])) {
-          parsedData = parsedData[key];
-        } else {
-          parsedData = Object.values(parsedData)[0];
-        }
-      }
+      const parsed = JSON.parse(aiResponse);
+      parsedData = parsed.data || [];
     } catch (e) {
       console.error("Failed to parse AI JSON:", e);
       throw new Error("AI returned invalid JSON");
@@ -83,7 +80,9 @@ Respond with a JSON object containing a "data" key which is an array of objects:
           .update({
             floor: item.floor,
             stroller_accessible: item.stroller_accessible,
-            highchair_available: item.highchair_available
+            highchair_available: item.highchair_available,
+            tags: item.tags,
+            description: item.description
           })
           .eq('id', originalRestaurant.id);
       }

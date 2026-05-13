@@ -11,39 +11,59 @@ interface MallCardProps {
 
 export const MallCard: React.FC<MallCardProps> = ({ id, name, city, district, image }) => {
   const nursingRoomMap: Record<string, string> = {
-    "현대백화점 판교점": "7층 유아휴게실",
-    "현대백화점 더현대서울점": "5층 유아휴게실",
+    "현대백화점 판교점": "5층 유아휴게실",
     "더현대 서울": "5층 유아휴게실",
+    "현대백화점 더현대서울점": "5층 유아휴게실",
     "현대백화점 무역센터점": "4층 유아휴게실",
-    "현대백화점 압구정본점": "지하 1층 유아휴게실",
+    "현대백화점 압구정본점": "5층 유아휴게실",
+    "현대백화점 목동점": "5층 유아휴게실",
+    "현대백화점 신촌점": "6층 유아휴게실",
+    "현대백화점 미아점": "6층 유아휴게실",
+    "현대백화점 천호점": "8층 유아휴게실",
+    "현대백화점 중동점": "6층 유아휴게실",
+    "현대백화점 킨텍스점": "6층 유아휴게실",
+    "현대백화점 부산점": "6층 유아휴게실",
+    "현대백화점 울산점": "7층 유아휴게실",
+    "더현대 대구": "6층 유아휴게실",
+    "현대백화점 충청점": "6층 유아휴게실",
+    "커넥트현대 부산": "6층 유아휴게실",
+    "현대프리미엄아울렛 김포점": "3층 유아휴게실",
+    "현대프리미엄아울렛 송도점": "2층 유아휴게실",
+    "현대프리미엄아울렛 대전점": "3층 유아휴게실",
+    "현대프리미엄아울렛 SPACE 1": "3층 유아휴게실",
   };
-  
-  const nursingInfo = nursingRoomMap[name] || "유아휴게실 완비";
+
+  // 가공된 이름으로 매칭 시도 (불필요한 공백 제거 등)
+  const cleanName = name.trim();
+  const nursingInfo = district ||
+    nursingRoomMap[cleanName] ||
+    Object.entries(nursingRoomMap).find(([key]) => cleanName.includes(key))?.[1] ||
+    "유아휴게실 완비";
 
   return (
-    <Link href={`/malls/${id}`} className="block active:scale-[0.96] transition-transform duration-200">
-      <div className="group relative h-64 rounded-[32px] overflow-hidden shadow-sm transition-all duration-500 hover:shadow-xl">
-        <img 
-          src={image} 
-          alt={name} 
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-        
-        <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30">
-          <span className="text-[10px] text-white font-bold">{city}</span>
+    <Link
+      href={`/malls/${id}`}
+      className="group relative block overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 aspect-[4/3]"
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-orange-50 opacity-50" />
+
+      <div className="relative h-full p-6 flex flex-col justify-between">
+        <div className="flex justify-between items-start">
+          <div className="px-3 py-1 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full shadow-sm">
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{city}</span>
+          </div>
         </div>
 
-        <div className="absolute bottom-6 left-6 text-white">
-          <div className="flex gap-2 mb-2">
-            <span className="text-[10px] font-bold bg-[#FF8A5B] text-white px-2 py-1 rounded-md shadow-sm">📍 {nursingInfo}</span>
-            <span className="text-[10px] font-bold bg-black/40 backdrop-blur-md px-2 py-1 rounded-md border border-white/20">#프리미엄식당가</span>
+        <div className="text-gray-900 mt-auto">
+          <div className="flex gap-2 mb-3">
+            <span className="text-[11px] font-bold bg-orange-50 text-orange-600 px-2.5 py-1 rounded-lg border border-orange-100 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
+              {nursingInfo}
+            </span>
           </div>
-          <h3 className="text-2xl font-bold tracking-tight">{name}</h3>
-          <div className="mt-3 flex items-center gap-1">
-             <div className="h-1 w-8 bg-[#FF8A5B] rounded-full" />
-             <span className="text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-1">상세 보기</span>
-          </div>
+          <h3 className="text-2xl font-extrabold tracking-tight text-gray-900 group-hover:text-purple-600 transition-colors duration-300">
+            {name}
+          </h3>
         </div>
       </div>
     </Link>

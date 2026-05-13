@@ -1,80 +1,128 @@
+import fs from 'fs';
+import path from 'path';
 import { NextResponse } from 'next/server';
-import { KakaoPlaceService } from '@/lib/sync/kakaoScraper';
-import { RestaurantService } from '@/lib/services/restaurantService';
+import OpenAI from 'openai';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { HYUNDAI_BRANCHES } from '@/lib/sync/hyundaiScraper';
+import { HyundaiMallScraper, HYUNDAI_BRANCHES } from '@/lib/sync/hyundaiScraper';
+import { UrlScraper } from '@/lib/sync/urlScraper';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // Allow maximum 60 seconds if running on Pro/Cron
 
 export async function GET(request: Request) {
-  // Protect cron endpoint - Vercel automatically sends this header for legitimate cron requests
   const authHeader = request.headers.get('authorization');
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    // In local dev, we might not have CRON_SECRET, so allow if it's missing entirely or if forced via query
-    const url = new URL(request.url);
-    if (!url.searchParams.get('force') && process.env.NODE_ENV !== 'development') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (process.env.NODE_ENV === 'production' && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Determine category based on day of week
-  const day = new Date().getDay(); // 0 (Sun) to 6 (Sat)
-  const categoryRotation = [
-    '분식',        // 0: Sunday
-    '한식',        // 1: Monday
-    '일식',        // 2: Tuesday
-    '중식',        // 3: Wednesday
-    '양식',        // 4: Thursday
-    '카페',        // 5: Friday
-    '베이커리'     // 6: Saturday
-  ];
-  const targetCategory = categoryRotation[day];
-
-  const kakaoService = new KakaoPlaceService();
-  const results = [];
+  const apiKey = process.env.OPENAI_API_KEY;
+  const openai = new OpenAI({ apiKey });
+  const scraper = new HyundaiMallScraper();
+  const urlScraper = new UrlScraper();
 
   try {
-    // Ensure malls exist
-    const mallIds: Record<string, string> = {};
-    for (const branch of HYUNDAI_BRANCHES) {
-      let { data: mall } = await supabaseAdmin.from('malls').select('id').eq('name', branch.name).single();
-      if (!mall) {
-        const { data: newMall, error } = await supabaseAdmin.from('malls').insert([{
-          name: branch.name,
-          city: '서울',
-          district: '주요상권',
-          image_url: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=1000&auto=format&fit=crop'
-        }]).select('id').single();
-        if (error) continue;
-        mall = newMall;
-      }
-      mallIds[branch.name] = mall.id;
-    }
+    const { data: malls, error: mallError } = await supabaseAdmin.from('malls').select('id, name, source_url');
+    if (mallError) throw mallError;
 
-    // For cron, we sync ALL branches, but ONLY for the specific targetCategory
-    // This keeps the payload small enough to usually avoid timeout
-    for (const branch of HYUNDAI_BRANCHES) {
-      const mallId = mallIds[branch.name];
-      if (!mallId) continue;
+    let totalNew = 0;
+    let totalUpdated = 0;
 
-      console.log(`Cron Syncing [${branch.name}] for category: [${targetCategory}]`);
-      const scrapedRests = await kakaoService.fetchRestaurantsForMall(branch.name, targetCategory);
+    for (const mall of malls) {
+      console.log(`Processing mall: ${mall.name}...`);
       
-      if (scrapedRests.length > 0) {
-        await RestaurantService.upsertRestaurants(mallId, scrapedRests);
+      let scrapedList: any[] = [];
+      const sourceUrl = mall.source_url;
+
+      if (sourceUrl) {
+        console.log(`Using custom source URL for ${mall.name}`);
+        scrapedList = await urlScraper.scrapeRestaurantsFromUrl(sourceUrl, mall.name);
+      } else {
+        // Track A: Scrape Official Data (Fallback to old Hyundai Scraper logic if no URL)
+        const branchInfo = HYUNDAI_BRANCHES.find(b => b.name === mall.name || mall.name.includes(b.name.replace('현대백화점 ', '')));
+        if (branchInfo) {
+          scrapedList = await scraper.fetchByBranch(branchInfo.name, branchInfo.code);
+        } else {
+          // Fallback to AI discovery
+          const discoverPrompt = `List ALL restaurants in "${mall.name}". JSON format: {"data": [{"name": "...", "category": "...", "floor": "..."}]}`;
+          const discComp = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [{ role: "user", content: discoverPrompt }],
+            response_format: { type: "json_object" }
+          });
+          scrapedList = JSON.parse(discComp.choices[0].message.content || '{"data": []}').data || [];
+        }
       }
 
-      results.push({ branch: branch.name, category: targetCategory, count: scrapedRests.length });
+      if (!scrapedList || scrapedList.length === 0) continue;
+
+      // Fetch existing
+      const { data: existingRests } = await supabaseAdmin.from('restaurants').select('id, name, status').eq('mall_id', mall.id);
+      const existingMap = new Map(existingRests?.map(r => [r.name, r]) || []);
+      const scrapedNames = new Set(scrapedList.map(r => r.name));
+
+      // Track B: Enrich new restaurants
+      const newRestaurants = scrapedList.filter(r => !existingMap.has(r.name));
+      if (newRestaurants.length > 0) {
+        const namesToEnrich = newRestaurants.map(r => r.name).join(', ');
+        const enrichPrompt = `
+You are an expert on child-friendly dining. Enrich these restaurants in ${mall.name}: ${namesToEnrich}.
+Provide tags (3-4 hashtags like #아기의자완비, #유모차편한) and a short description for parents.
+Return JSON: {"data": [{"name": "...", "tags": [...], "description": "...", "highchair_available": true/false, "stroller_accessible": true/false}]}
+`;
+        const enrichComp = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [{ role: "user", content: enrichPrompt }],
+          response_format: { type: "json_object" }
+        });
+        const enrichedData = JSON.parse(enrichComp.choices[0].message.content || '{"data": []}').data || [];
+        
+        // Merge enriched data
+        for (const newRest of newRestaurants) {
+          const enrichInfo = enrichedData.find((e: any) => e.name === newRest.name);
+          if (enrichInfo) {
+            newRest.tags = enrichInfo.tags || [];
+            newRest.description = enrichInfo.description || '';
+            newRest.highchair_available = enrichInfo.highchair_available ?? true;
+            newRest.stroller_accessible = enrichInfo.stroller_accessible ?? true;
+          }
+        }
+      }
+
+      // Upsert scraped & enriched
+      for (const item of scrapedList) {
+        const { error } = await supabaseAdmin
+          .from('restaurants')
+          .upsert({
+            mall_id: mall.id,
+            name: item.name,
+            category: item.category,
+            floor: item.floor,
+            tags: item.tags || [],
+            description: item.description || '',
+            status: 'OPEN',
+            stroller_accessible: item.stroller_accessible ?? true,
+            highchair_available: item.highchair_available ?? true,
+            last_updated: new Date().toISOString()
+          }, { onConflict: 'mall_id, name' });
+
+        if (!error) totalUpdated++;
+      }
+
+      // Mark closed
+      for (const [name, existing] of Array.from(existingMap.entries())) {
+        if (!scrapedNames.has(name) && existing.status !== 'CLOSED') {
+          await supabaseAdmin.from('restaurants').update({ status: 'CLOSED' }).eq('id', existing.id);
+        }
+      }
     }
 
-    return NextResponse.json({
-      success: true,
-      message: `Daily Cron Sync complete for category: ${targetCategory}`,
-      results
+    return NextResponse.json({ 
+      success: true, 
+      message: `Auto-sync completed. Processed ${malls.length} malls.`,
+      updated_count: totalUpdated
     });
+
   } catch (error: any) {
-    console.error('Cron sync failed:', error);
+    console.error('Cron Sync Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
