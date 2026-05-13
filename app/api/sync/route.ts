@@ -68,6 +68,11 @@ export async function GET(request: NextRequest) {
         }
         mall = newMall;
       }
+      
+      if (!mall) {
+        console.warn(`[Sync] Skipping branch ${branch.name} - could not find/create mall`);
+        continue;
+      }
 
       // 3. Scrape this branch using Kakao API
       const scrapedData = await scraper.fetchRestaurantsForMall(branch.name);

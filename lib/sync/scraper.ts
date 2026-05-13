@@ -29,6 +29,8 @@ export interface ScrapedRestaurant {
   stroller_accessible?: boolean;
   highchair_available?: boolean;
   description?: string;
+  phone?: string;
+  mall_name?: string;
 }
 
 /**

@@ -102,7 +102,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUpdate = async (id: string, field: keyof Restaurant, value: string | boolean) => {
+  const handleUpdate = async (id: string, field: keyof Restaurant, value: string | boolean | string[]) => {
     // Optimistic UI update
     setRestaurants(prev => 
       prev.map(r => r.id === id ? { ...r, [field]: value } : r)

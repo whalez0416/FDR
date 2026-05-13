@@ -10,7 +10,7 @@ export class UrlScraper {
     this.openai = new OpenAI({ apiKey });
   }
 
-  async scrapeRestaurantsFromUrl(url: string, mallName: string): Promise<any[]> {
+  async scrapeRestaurantsFromUrl(url: string, mallName: string): Promise<any> {
     console.log(`[UrlScraper] Fetching URL for ${mallName}: ${url}`);
     
     try {
@@ -57,7 +57,10 @@ Each object in the array should have:
 - "category": string (e.g., 카페, 한식, 일식)
 - "floor": string (e.g., B1, 1F, 9F)
 
-If no restaurants are found, return {"data": []}.
+Additionally, look for any mention of a "유아휴게실" (Nursing room/Baby lounge) or "수유실" location for the entire mall.
+If found, return it in a top-level "nursingInfo" field (e.g., "6층 서비스라운지 옆").
+
+If no restaurants are found, return {"data": [], "nursingInfo": null}.
 `;
 
       const completion = await this.openai.chat.completions.create({
@@ -66,8 +69,8 @@ If no restaurants are found, return {"data": []}.
         response_format: { type: "json_object" }
       });
 
-      const result = JSON.parse(completion.choices[0].message.content || '{"data": []}');
-      return result.data || [];
+      const result = JSON.parse(completion.choices[0].message.content || '{"data": [], "nursingInfo": null}');
+      return result;
 
     } catch (error) {
       console.error(`[UrlScraper] Error scraping ${mallName}:`, error);

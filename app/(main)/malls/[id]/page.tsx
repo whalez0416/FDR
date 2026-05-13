@@ -4,14 +4,15 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { RestaurantItem } from '@/components/restaurant/RestaurantItem';
 import { ReviewSection } from '@/components/restaurant/ReviewSection';
-import { ChevronLeft, Info, Map as MapIcon, Share2, Sparkles, X, Star, Baby, Footprints, MapPin, Phone, Heart } from 'lucide-react';
+import { ChevronLeft, Info, Map as MapIcon, Share2, Sparkles, X, Star, Baby, Footprints, MapPin, Phone, Heart, Search } from 'lucide-react';
+import { Restaurant } from '@/types';
 import { supabase } from '@/lib/supabase/client';
 
 export default function MallDetail({ params }: { params: { id: string } }) {
   const [mall, setMall] = useState<any>(null);
-  const [restaurants, setRestaurants] = useState<any[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isMapOpen, setIsMapOpen] = useState(false);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [activeFloor, setActiveFloor] = useState<string>('');
 
   const [savedIds, setSavedIds] = useState<string[]>([]);
@@ -50,21 +51,25 @@ export default function MallDetail({ params }: { params: { id: string } }) {
   };
 
   const [selectedCategory, setSelectedCategory] = useState<string>('전체');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const mallName = mall?.name || "백화점 정보 로딩 중...";
   
   // Extract categories
-  const categories = ['전체', ...Array.from(new Set((restaurants || []).flatMap(r => (r.category || '기타').split(',').map((c: string) => c.trim()))))];
+  const categories = ['전체', ...Array.from(new Set((restaurants || []).flatMap((r: Restaurant) => (r.category || '기타').split(',').map((c: string) => c.trim()))))];
 
-  const filteredRestaurants = selectedCategory === '전체' 
-    ? restaurants 
-    : restaurants.filter(r => (r.category || '').includes(selectedCategory));
+  const filteredRestaurants = restaurants.filter(r => {
+    const matchesCategory = selectedCategory === '전체' || (r.category || '').includes(selectedCategory);
+    const matchesSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         (r.category || '').toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
-  const groupedByFloor = (filteredRestaurants || []).reduce((acc, rest) => {
+  const groupedByFloor = (filteredRestaurants || []).reduce((acc, rest: Restaurant) => {
     if (!acc[rest.floor]) acc[rest.floor] = [];
     acc[rest.floor].push(rest);
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {} as Record<string, Restaurant[]>);
 
   const floors = Object.keys(groupedByFloor).sort().reverse();
 
@@ -125,21 +130,34 @@ export default function MallDetail({ params }: { params: { id: string } }) {
            </button>
         </div>
 
-        {/* Category Filter */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`flex-shrink-0 px-4 py-2.5 rounded-2xl text-[13px] font-bold transition-all ${
-                selectedCategory === cat
-                  ? 'bg-[#2D241E] text-white'
-                  : 'bg-[#F3E9E0]/30 text-[#8D7B6D] hover:bg-[#F3E9E0]/50'
-              }`}
-            >
-              #{cat}
-            </button>
-          ))}
+        {/* Search & Category Filter */}
+        <div className="space-y-6">
+          <div className="relative">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C4B5A9]" />
+            <input 
+              type="text"
+              placeholder="식당 이름이나 종류를 입력하세요..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-6 py-4 bg-white rounded-2xl border border-[#F3E9E0] text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A5B]/20 transition-all shadow-sm"
+            />
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`flex-shrink-0 px-4 py-2.5 rounded-2xl text-[13px] font-bold transition-all ${
+                  selectedCategory === cat
+                    ? 'bg-[#2D241E] text-white shadow-lg'
+                    : 'bg-[#F3E9E0]/30 text-[#8D7B6D] hover:bg-[#F3E9E0]/50'
+                }`}
+              >
+                #{cat}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

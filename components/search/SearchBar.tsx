@@ -12,7 +12,7 @@ export function SearchBar() {
   // Debounced search update
   useEffect(() => {
     const timer = setTimeout(() => {
-      const params = new URLSearchParams(searchParams);
+      const params = new URLSearchParams(searchParams.toString());
       if (query) {
         params.set('q', query);
       } else {

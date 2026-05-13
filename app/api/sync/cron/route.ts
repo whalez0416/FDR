@@ -34,7 +34,13 @@ export async function GET(request: Request) {
 
       if (sourceUrl) {
         console.log(`Using custom source URL for ${mall.name}`);
-        scrapedList = await urlScraper.scrapeRestaurantsFromUrl(sourceUrl, mall.name);
+        const scrapeResult = await urlScraper.scrapeRestaurantsFromUrl(sourceUrl, mall.name);
+        scrapedList = scrapeResult.data || [];
+
+        if (scrapeResult.nursingInfo) {
+          console.log(`[Sync] Updating nursing info for ${mall.name}: ${scrapeResult.nursingInfo}`);
+          await supabaseAdmin.from('malls').update({ district: scrapeResult.nursingInfo }).eq('id', mall.id);
+        }
       } else {
         // Track A: Scrape Official Data (Fallback to old Hyundai Scraper logic if no URL)
         const branchInfo = HYUNDAI_BRANCHES.find(b => b.name === mall.name || mall.name.includes(b.name.replace('현대백화점 ', '')));

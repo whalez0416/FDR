@@ -24,6 +24,9 @@ export const HYUNDAI_BRANCHES = [
 ];
 
 export class HyundaiMallScraper extends BaseScraper {
+  mallName = 'Hyundai Department Store';
+  baseUrl = 'https://www.ehyundai.com';
+
   async fetchByBranch(branchName: string, branchCode: string): Promise<ScrapedRestaurant[]> {
     const categories = [
       { id: 'B0670100', label: '전문식당가' },
