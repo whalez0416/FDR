@@ -24,10 +24,14 @@ export async function PATCH(request: Request) {
     
     const table = type === 'mall' ? 'malls' : 'restaurants';
     
-    const { error } = await supabaseAdmin
-      .from(table)
-      .update(updates)
-      .eq('id', id);
+    let query;
+    if (id) {
+      query = supabaseAdmin.from(table).update(updates).eq('id', id);
+    } else {
+      query = supabaseAdmin.from(table).insert(updates);
+    }
+
+    const { error } = await query;
 
     if (error) throw error;
 
