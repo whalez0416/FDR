@@ -24,18 +24,34 @@ export async function POST(request: Request) {
 
     let parsedData: any = { restaurants: [] };
 
-    // Check if custom URL exists
-    const urlFilePath = path.join(process.cwd(), 'data', 'mall_urls.json');
-    let sourceUrl = '';
-    if (fs.existsSync(urlFilePath)) {
-      const urls = JSON.parse(fs.readFileSync(urlFilePath, 'utf8'));
-      sourceUrl = urls[mallId];
+    // 1. Fetch mall from database to get the live registered source_url
+    const { data: mallData, error: mallError } = await supabaseAdmin
+      .from('malls')
+      .select('source_url, district')
+      .eq('id', mallId)
+      .single();
+
+    if (mallError || !mallData) {
+      return NextResponse.json({ error: 'Failed to fetch mall data' }, { status: 400 });
     }
+
+    const sourceUrl = mallData.source_url;
 
     if (sourceUrl) {
       console.log(`[Discovery] Using URL Scraper for ${mallName}: ${sourceUrl}`);
       const urlScraper = new UrlScraper();
-      parsedData.restaurants = await urlScraper.scrapeRestaurantsFromUrl(sourceUrl, mallName);
+      const scrapeResult = await urlScraper.scrapeRestaurantsFromUrl(sourceUrl, mallName);
+      
+      // Correctly unwrap data array from UrlScraper result
+      parsedData.restaurants = scrapeResult?.data || [];
+      
+      // Auto-populate nursing room info if found and not already present
+      if (scrapeResult?.nursingInfo && !mallData.district) {
+        await supabaseAdmin
+          .from('malls')
+          .update({ district: scrapeResult.nursingInfo })
+          .eq('id', mallId);
+      }
     } else {
       console.log(`[Discovery] Using AI Knowledge for ${mallName}`);
       const prompt = `

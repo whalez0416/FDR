@@ -13,6 +13,11 @@ export class UrlScraper {
   async scrapeRestaurantsFromUrl(url: string, mallName: string): Promise<any> {
     console.log(`[UrlScraper] Fetching URL for ${mallName}: ${url}`);
     
+    // 1. Intercept Shinsegae Department Store dining guide URLs
+    if (url.includes('shinsegae.com/store/restaurant.do')) {
+      return this.scrapeShinsegaeViaAjax(url, mallName);
+    }
+    
     try {
       const response = await fetch(url, {
         headers: {
@@ -74,7 +79,78 @@ If no restaurants are found, return {"data": [], "nursingInfo": null}.
 
     } catch (error) {
       console.error(`[UrlScraper] Error scraping ${mallName}:`, error);
-      return [];
+      return { data: [], nursingInfo: null };
+    }
+  }
+
+  async scrapeShinsegaeViaAjax(url: string, mallName: string): Promise<any> {
+    try {
+      const urlObj = new URL(url);
+      const storeCd = urlObj.searchParams.get('storeCd') || 'SC00001';
+      // SC00006 -> 6
+      const storeSeq = parseInt(storeCd.replace('SC', ''), 10).toString();
+      
+      const ajaxUrl = `https://www.shinsegae.com/store/ajaxRestaurantData.do?storeSeq=${storeSeq}&storeCd=${storeCd}&schCategCd=`;
+      console.log(`[UrlScraper] Intercepted Shinsegae URL. Fetching AJAX: ${ajaxUrl}`);
+      
+      const response = await fetch(ajaxUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html, */*',
+          'Referer': url
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Shinsegae AJAX HTTP Error ${response.status}`);
+      }
+      
+      const html = await response.text();
+      const $ = load(html);
+      
+      const restaurants: any[] = [];
+      
+      $('li').each((_, el) => {
+        const titleEl = $(el).find('.title');
+        if (titleEl.length === 0) return;
+        
+        const floorText = titleEl.find('span').text().trim();
+        // Remove floor text from title text to get clean restaurant name
+        const rawName = titleEl.text().replace(floorText, '').trim();
+        // Standardize name (remove trailing spaces, brackets etc.)
+        const name = rawName.replace(/\s+/g, ' ').trim();
+        
+        const descText = $(el).find('.desc').text().replace(/\s+/g, ' ').trim();
+        
+        // Map category intelligently based on description terms
+        let category = '전문식당가';
+        if (descText.includes('카페') || descText.includes('디저트') || descText.includes('베이커리') || descText.includes('커피') || descText.includes('아이스크림')) {
+          category = '카페/디저트';
+        } else if (descText.includes('어묵') || descText.includes('떡볶이') || descText.includes('김밥') || descText.includes('샐러드') || descText.includes('만두') || descText.includes('유부초밥')) {
+          category = '델리';
+        } else if (descText.includes('푸드') || descText.includes('덮밥') || descText.includes('텐동') || descText.includes('일식') || descText.includes('한식') || descText.includes('냉면')) {
+          category = '푸드플라자';
+        }
+        
+        if (name) {
+          restaurants.push({
+            name,
+            category,
+            floor: floorText || '지하 1층'
+          });
+        }
+      });
+      
+      console.log(`[UrlScraper] Successfully parsed ${restaurants.length} restaurants from Shinsegae AJAX!`);
+      
+      return {
+        data: restaurants,
+        nursingInfo: null
+      };
+      
+    } catch (error) {
+      console.error(`[UrlScraper] Error scraping Shinsegae AJAX:`, error);
+      return { data: [], nursingInfo: null };
     }
   }
 }
