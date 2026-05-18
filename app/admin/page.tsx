@@ -246,43 +246,53 @@ export default function AdminDashboard() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           {/* Mall Selector Header */}
-          <div className="border-b border-gray-100 bg-gray-50 p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex flex-wrap gap-2">
-              {malls.map(mall => (
-                <button
-                  key={mall.id}
-                  onClick={() => setSelectedMallId(mall.id)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedMallId === mall.id 
-                      ? 'bg-orange-500 text-white shadow-md' 
-                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  {mall.name}
-                </button>
-              ))}
+          <div className="border-b border-gray-100 bg-gray-50 p-6 flex flex-col gap-6">
+            {/* Row 1: Mall Buttons in a compact scrollable box */}
+            <div className="w-full">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">지점 선택 ({malls.length}개 지점)</h3>
+                <span className="text-[10px] text-gray-400">마우스 휠로 스크롤하여 더 많은 지점을 볼 수 있습니다</span>
+              </div>
+              <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-3 bg-white rounded-xl border border-gray-200 shadow-inner">
+                {malls.map(mall => (
+                  <button
+                    key={mall.id}
+                    onClick={() => setSelectedMallId(mall.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 active:scale-95 ${
+                      selectedMallId === mall.id 
+                        ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
+                        : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    {mall.name}
+                  </button>
+                ))}
+              </div>
             </div>
             
-            <div className="w-full mt-4 flex flex-col md:flex-row gap-4">
-              <div className="flex-1 bg-white p-3 rounded border border-gray-200">
-                <label className="block text-xs font-bold text-gray-700 mb-1">선택된 지점의 공식 식당 안내 URL (크롤링용)</label>
-                <div className="flex gap-2 items-center">
-                  <input
-                    type="text"
-                    value={malls.find(m => m.id === selectedMallId)?.source_url || ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setMalls(prev => prev.map(m => m.id === selectedMallId ? { ...m, source_url: val } : m));
-                    }}
-                    onBlur={(e) => selectedMallId && handleMallUpdate(selectedMallId, { source_url: e.target.value })}
-                    placeholder="https://... (입력 후 바깥을 클릭하면 자동 저장됩니다)"
-                    className="flex-1 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
-                </div>
+            {/* Row 2: Inputs & Actions in a balanced Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+              {/* Input 1: Crawler URL */}
+              <div className="lg:col-span-4 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">선택된 지점의 공식 식당 안내 URL (크롤링용)</label>
+                <input
+                  type="text"
+                  value={malls.find(m => m.id === selectedMallId)?.source_url || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setMalls(prev => prev.map(m => m.id === selectedMallId ? { ...m, source_url: val } : m));
+                  }}
+                  onBlur={(e) => selectedMallId && handleMallUpdate(selectedMallId, { source_url: e.target.value })}
+                  placeholder="https://... (입력 후 바깥을 클릭하면 자동 저장됩니다)"
+                  className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
+                />
               </div>
 
-              <div className="flex-1 bg-white p-3 rounded border border-gray-200">
-                <label className="block text-xs font-bold text-gray-700 mb-1">유아휴게실(수유실) 위치 정보 (DB의 district 컬럼 사용)</label>
+              {/* Input 2: Nursing room location */}
+              <div className="lg:col-span-4 bg-white p-3 rounded-xl border border-gray-200 shadow-sm relative">
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                  유아휴게실(수유실) 위치 정보 <span className="text-[10px] text-purple-500 font-medium">(district 컬럼)</span>
+                </label>
                 <div className="flex gap-2 items-center">
                   <input
                     type="text"
@@ -293,46 +303,50 @@ export default function AdminDashboard() {
                     }}
                     onBlur={(e) => selectedMallId && handleMallUpdate(selectedMallId, { district: e.target.value })}
                     placeholder="예: 6층 서비스라운지 옆, 본관 4층 유아휴게실"
-                    className="flex-1 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none"
+                    className="flex-1 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
                   />
-                  {savingId === 'mall_' + selectedMallId && <span className="text-xs text-blue-500 animate-pulse w-16">저장 중...</span>}
+                  {savingId === 'mall_' + selectedMallId && (
+                    <span className="absolute right-4 top-1 text-[10px] text-purple-600 animate-pulse font-bold">저장 중...</span>
+                  )}
                 </div>
               </div>
-            </div>
 
-            <div className="w-full mt-4 flex flex-col md:flex-row justify-end gap-2">
-              <button
-                onClick={handleAIFill}
-              disabled={isAIFilling || currentRestaurants.length === 0}
-              className={`flex items-center px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all ${
-                isAIFilling 
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                  : 'bg-purple-600 text-white hover:bg-purple-700 hover:shadow-md'
-              }`}
-            >
-              {isAIFilling ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  AI 분석 중...
-                </>
-              ) : '✨ AI로 층수/정보 싹 채우기'}
-            </button>
-            
-            <button
-              onClick={handleDiscover}
-              disabled={isDiscovering}
-              className={`flex items-center px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all ${
-                isDiscovering 
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                  : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-md'
-              }`}
-            >
-              {isDiscovering ? '🔍 검색 중...' : '🔍 누락된 식당 찾기'}
-            </button>
+              {/* Action Buttons */}
+              <div className="lg:col-span-4 flex gap-2 h-[46px]">
+                <button
+                  onClick={handleAIFill}
+                  disabled={isAIFilling || currentRestaurants.length === 0}
+                  className={`flex-1 flex items-center justify-center px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-95 ${
+                    isAIFilling 
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'bg-purple-600 text-white hover:bg-purple-700 hover:shadow-md shadow-purple-600/10'
+                  }`}
+                >
+                  {isAIFilling ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      AI 채우는 중...
+                    </>
+                  ) : '✨ AI 싹 채우기'}
+                </button>
+                
+                <button
+                  onClick={handleDiscover}
+                  disabled={isDiscovering}
+                  className={`flex-1 flex items-center justify-center px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-95 ${
+                    isDiscovering 
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-md shadow-indigo-600/10'
+                  }`}
+                >
+                  {isDiscovering ? '🔍 검색 중...' : '🔍 누락 식당 찾기'}
+                </button>
+              </div>
             </div>
+          </div>
           </div>
 
           {/* Discovery Results */}
