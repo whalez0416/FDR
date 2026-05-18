@@ -347,7 +347,6 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
-          </div>
 
           {/* Discovery Results */}
           {discoveredRests.length > 0 && (
