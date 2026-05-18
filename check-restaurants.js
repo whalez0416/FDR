@@ -1,4 +1,8 @@
-require('dotenv').config({ path: '.env.local' });
+try {
+  require('dotenv').config({ path: '.env.local' });
+} catch (e) {
+  // Environment variables are already loaded by Vercel CLI or hosting provider
+}
 const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(

@@ -54,6 +54,20 @@ export default function MallDetail({ params }: { params: { id: string } }) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const mallName = mall?.name || "백화점 정보 로딩 중...";
+
+  // Normalize floor names to handle inconsistent spacing (e.g., '본관지하1층' -> '본관 지하 1층')
+  const normalizeFloor = (floor: string): string => {
+    if (!floor) return '';
+    const clean = floor.replace(/\s+/g, '').trim();
+    return clean
+      .replace(/본관/g, '본관 ')
+      .replace(/신관/g, '신관 ')
+      .replace(/지하/g, '지하 ')
+      .replace(/지상/g, '지상 ')
+      .replace(/([0-9]+)층/g, '$1층')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
   
   // Extract categories
   const categories = ['전체', ...Array.from(new Set((restaurants || []).flatMap((r: Restaurant) => (r.category || '기타').split(',').map((c: string) => c.trim()))))];
@@ -66,8 +80,9 @@ export default function MallDetail({ params }: { params: { id: string } }) {
   });
 
   const groupedByFloor = (filteredRestaurants || []).reduce((acc, rest: Restaurant) => {
-    if (!acc[rest.floor]) acc[rest.floor] = [];
-    acc[rest.floor].push(rest);
+    const normFloor = normalizeFloor(rest.floor);
+    if (!acc[normFloor]) acc[normFloor] = [];
+    acc[normFloor].push(rest);
     return acc;
   }, {} as Record<string, Restaurant[]>);
 
@@ -167,7 +182,7 @@ export default function MallDetail({ params }: { params: { id: string } }) {
           floors.map((floor) => (
             <section key={floor} id={`floor-${floor}`} className="animate-fade-up scroll-mt-40">
               <div className="flex items-center gap-3 mb-6">
-                 <div className="w-10 h-10 bg-[#2D241E] text-white rounded-xl flex items-center justify-center font-bold text-sm">{floor}</div>
+                 <div className="px-4 h-9 bg-[#2D241E] text-white rounded-full flex items-center justify-center font-bold text-xs whitespace-nowrap shadow-sm">{floor}</div>
                  <div className="h-[1px] flex-1 bg-[#F3E9E0]" />
               </div>
               <div className="grid grid-cols-1 gap-5">
