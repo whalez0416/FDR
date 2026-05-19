@@ -39,9 +39,7 @@ export class UrlScraper {
 
       let pageContent = $('body').text().replace(/\s+/g, ' ').trim();
       
-      // If the content is too large, we might need to truncate or chunk it. 
-      // GPT-4o supports up to 128k tokens, which is usually >300,000 characters.
-      // We will limit to 100,000 characters to be safe.
+      // GPT-4o supports up to 128k tokens. We will limit to 100,000 characters.
       if (pageContent.length > 100000) {
         pageContent = pageContent.substring(0, 100000);
       }
@@ -83,11 +81,73 @@ If no restaurants are found, return {"data": [], "nursingInfo": null}.
     }
   }
 
+  async scrapeFacilityFromUrl(url: string, mallName: string): Promise<string | null> {
+    console.log(`[UrlScraper] Fetching facility URL for ${mallName}: ${url}`);
+    
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error ${response.status} for ${url}`);
+      }
+
+      const html = await response.text();
+      const $ = load(html);
+
+      // Clean up body
+      $('script:not([type="application/json"])').remove();
+      $('style, svg, img, video, iframe, nav, footer').remove();
+
+      let pageContent = $('body').text().replace(/\s+/g, ' ').trim();
+      
+      if (pageContent.length > 50000) {
+        pageContent = pageContent.substring(0, 50000);
+      }
+
+      const prompt = `
+You are a highly capable data extraction AI.
+I am providing you with the text content of a facility or service page for a shopping mall named "${mallName}".
+Your task is to find and extract the location and information of:
+1. "유아휴게실" / "수유실" / "아기 lounge" (Baby lounge / Nursing room)
+2. "유모차 대여" / "유모차 대여소" (Stroller rental)
+
+Format the output strictly as a single concise Korean sentence describing their locations.
+For example:
+"유아휴게실: 본관 6층 서비스라운지 옆 | 유모차대여: 1층 안내데스크"
+
+If only one of them is found, describe only that one (e.g. "유아휴게실: 3층 아동 매장 안").
+If neither is found, return "정보 없음".
+`;
+
+      const completion = await this.openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "You are a factual summarizer. Respond with only the concise Korean summary line. No markdown formatting." },
+          { role: "user", content: `Webpage content for ${mallName}:\n\n${pageContent}\n\n${prompt}` }
+        ]
+      });
+
+      const result = completion.choices[0].message.content?.trim();
+      if (result && result !== "정보 없음") {
+        return result;
+      }
+      return null;
+
+    } catch (error) {
+      console.error(`[UrlScraper] Error scraping facility ${mallName}:`, error);
+      return null;
+    }
+  }
+
   async scrapeShinsegaeViaAjax(url: string, mallName: string): Promise<any> {
     try {
       const urlObj = new URL(url);
       const storeCd = urlObj.searchParams.get('storeCd') || 'SC00001';
-      // SC00006 -> 6
       const storeSeq = parseInt(storeCd.replace('SC', ''), 10).toString();
       
       const ajaxUrl = `https://www.shinsegae.com/store/ajaxRestaurantData.do?storeSeq=${storeSeq}&storeCd=${storeCd}&schCategCd=`;
@@ -115,14 +175,11 @@ If no restaurants are found, return {"data": [], "nursingInfo": null}.
         if (titleEl.length === 0) return;
         
         const floorText = titleEl.find('span').text().trim();
-        // Remove floor text from title text to get clean restaurant name
         const rawName = titleEl.text().replace(floorText, '').trim();
-        // Standardize name (remove trailing spaces, brackets etc.)
         const name = rawName.replace(/\s+/g, ' ').trim();
         
         const descText = $(el).find('.desc').text().replace(/\s+/g, ' ').trim();
         
-        // Map category intelligently based on description terms
         let category = '전문식당가';
         if (descText.includes('카페') || descText.includes('디저트') || descText.includes('베이커리') || descText.includes('커피') || descText.includes('아이스크림')) {
           category = '카페/디저트';

@@ -1,0 +1,432 @@
+[
+  {
+    "mall_name": "광주신세계",
+    "source_url": "https://www.shinsegae.com/store/restaurant.do?storeCd=SC00006#focus_move",
+    "facility_url": "https://www.shinsegae.com/store/facility.do?storeCd=SC00006#focus_move"
+  },
+  {
+    "mall_name": "대구신세계",
+    "source_url": "https://www.shinsegae.com/store/restaurant.do?storeCd=SC00013#focus_move",
+    "facility_url": "https://www.shinsegae.com/store/facility.do?storeCd=SC00013#focus_move"
+  },
+  {
+    "mall_name": "대전신세계 Art & Science",
+    "source_url": "https://www.shinsegae.com/store/restaurant.do?storeCd=SC00060#focus_move",
+    "facility_url": "https://www.shinsegae.com/store/facility.do?storeCd=SC00060#focus_move"
+  },
+  {
+    "mall_name": "더현대 대구",
+    "source_url": "https://www.ehyundai.com/newPortal/DP/DN/DN000000_V.do?branchCd=B00146000",
+    "facility_url": "https://www.ehyundai.com/newPortal/DP/IF/IF000002_V.do?branchCd=B00146000&n=2"
+  },
+  {
+    "mall_name": "더현대 서울",
+    "source_url": "https://www.ehyundai.com/newPortal/DP/DN/DN000000_V.do?branchCd=B00140000&diningGubn=B0670100&n=2",
+    "facility_url": "https://www.ehyundai.com/newPortal/DP/IF/IF000002_V.do?branchCd=B00140000"
+  },
+  {
+    "mall_name": "롯데백화점 강남점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0013",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0013"
+  },
+  {
+    "mall_name": "롯데백화점 건대스타시티점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0028",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0028"
+  },
+  {
+    "mall_name": "롯데백화점 관악점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0006",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0006"
+  },
+  {
+    "mall_name": "롯데백화점 광복점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0333",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0333"
+  },
+  {
+    "mall_name": "롯데백화점 광주점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0007",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0007"
+  },
+  {
+    "mall_name": "롯데백화점 구리점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0335",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0335"
+  },
+  {
+    "mall_name": "롯데백화점 김포공항점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0402",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0402"
+  },
+  {
+    "mall_name": "롯데백화점 노원점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0022",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0022"
+  },
+  {
+    "mall_name": "롯데백화점 대구점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0023",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0023"
+  },
+  {
+    "mall_name": "롯데백화점 대전점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0012",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0012"
+  },
+  {
+    "mall_name": "롯데백화점 동래점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0016",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0016"
+  },
+  {
+    "mall_name": "롯데백화점 동탄점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0399",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0399"
+  },
+  {
+    "mall_name": "롯데백화점 미아점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0026",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0026"
+  },
+  {
+    "mall_name": "롯데백화점 본점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0001",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0001"
+  },
+  {
+    "mall_name": "롯데백화점 부산본점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0005",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0005"
+  },
+  {
+    "mall_name": "롯데백화점 상인점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0024",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0024"
+  },
+  {
+    "mall_name": "롯데백화점 센텀시티점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0027",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0027"
+  },
+  {
+    "mall_name": "롯데백화점 수원점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0404",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0404"
+  },
+  {
+    "mall_name": "롯데백화점 안산점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0336",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0336"
+  },
+  {
+    "mall_name": "롯데백화점 영등포점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0010",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0010"
+  },
+  {
+    "mall_name": "롯데백화점 울산점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0015",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0015"
+  },
+  {
+    "mall_name": "롯데백화점 인천점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0344",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0344"
+  },
+  {
+    "mall_name": "롯데백화점 일산점",
+    "source_url": "https://www.lotteshopping.com/store/main?cstrCd=0011",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0011"
+  },
+  {
+    "mall_name": "롯데백화점 잠실점",
+    "source_url": "https://www.lotteshopping.com/store/main?cstrCd=0002",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0002"
+  },
+  {
+    "mall_name": "롯데백화점 전주점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0025",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0025"
+  },
+  {
+    "mall_name": "롯데백화점 중동점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0334",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0334"
+  },
+  {
+    "mall_name": "롯데백화점 창원점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0017",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0017"
+  },
+  {
+    "mall_name": "롯데백화점 청량리점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0004",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0004"
+  },
+  {
+    "mall_name": "롯데백화점 평촌점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0341",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0341"
+  },
+  {
+    "mall_name": "롯데백화점 포항점",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0014",
+    "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0014"
+  },
+  {
+    "mall_name": "신세계 사우스시티",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 스타일마켓 대전",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 가산점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 강남점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 고양점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 광양점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 기장점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 대구점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 대전점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 센텀점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 수원점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 스타필드마켓 경산점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 스타필드마켓 일산점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 스타필드마켓 죽전점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 시흥점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 안성점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 여주 프리미엄빌리지점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 여주점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 천안아산점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 천안터미널점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 타임스퀘어점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 팩토리스토어 파주점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계 푸드마켓 도곡점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계백화점 강남점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계백화점 김해점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계백화점 마산점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계백화점 본점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계백화점 센텀시티",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계백화점 스타필드 하남점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계백화점 의정부점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계백화점 천안아산점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "신세계백화점 타임스퀘어점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대백화점 충청점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "커넥트현대 부산",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "하우스오브신세계 청담",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대백화점 디큐브시티",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대백화점 목동점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대백화점 무역센터점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대백화점 미아점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대백화점 신촌점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대백화점 압구정본점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대백화점 울산점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대백화점 중동점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대백화점 천호점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대백화점 충청점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대백화점 킨텍스점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대백화점 판교점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대프리미엄아울렛 SPACE 1",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대프리미엄아울렛 김포점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대프리미엄아울렛 대전점",
+    "source_url": "",
+    "facility_url": ""
+  },
+  {
+    "mall_name": "현대프리미엄아울렛 송도점",
+    "source_url": "",
+    "facility_url": ""
+  }
+]

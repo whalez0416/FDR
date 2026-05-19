@@ -28,6 +28,73 @@ export default function AdminDashboard() {
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [discoveredRests, setDiscoveredRests] = useState<any[]>([]);
 
+  // Batch Sync States
+  const [isBatchOpen, setIsBatchOpen] = useState(false);
+  const [batchJsonInput, setBatchJsonInput] = useState('');
+  const [batchLogs, setBatchLogs] = useState<string[]>([]);
+  const [isBatchSyncing, setIsBatchSyncing] = useState(false);
+
+  const loadBatchTemplate = () => {
+    const template = malls.map(m => ({
+      mall_name: m.name,
+      source_url: m.source_url || "",
+      facility_url: (m as any).facility_url || ""
+    }));
+    setBatchJsonInput(JSON.stringify(template, null, 2));
+    setBatchLogs(["[Console] 현재 앱에 등록된 모든 지점 목록을 템플릿으로 로드했습니다. URL을 기입하여 '일괄 등록' 버튼을 누르세요."]);
+  };
+
+  const clearBatchInput = () => {
+    setBatchJsonInput('');
+    setBatchLogs([]);
+  };
+
+  const handleBatchSync = async () => {
+    try {
+      const parsed = JSON.parse(batchJsonInput);
+      if (!Array.isArray(parsed)) {
+        alert('올바른 JSON 배열 형식이어야 합니다. [ { ... }, { ... } ]');
+        return;
+      }
+      
+      if (!confirm(`입력하신 ${parsed.length}개 지점의 일괄 식당 등록을 진행하시겠습니까?`)) return;
+
+      setIsBatchSyncing(true);
+      setBatchLogs([`[Console] 일괄 식당 등록 시작... (지점수: ${parsed.length}개)`]);
+
+      const res = await fetch('/api/admin/batch-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: batchJsonInput
+      });
+
+      const data = await res.json();
+      if (data.success && data.results) {
+        const logs: string[] = [`🎉 일괄 식당 등록 성공 완료!`];
+        data.results.forEach((r: any) => {
+          if (r.success) {
+            logs.push(`✅ [${r.mall_name}] 발굴: ${r.scraped_count}개 | 신규 등록: ${r.registered_count}개`);
+          } else {
+            logs.push(`❌ [${r.mall_name}] 실패: ${r.error}`);
+          }
+        });
+        setBatchLogs(logs);
+        alert('🎉 모든 지점의 일괄 식당 등록이 완료되었습니다!');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        setBatchLogs([`❌ 등록 중단 오류: ${data.error || '알 수 없는 에러'}`]);
+        alert(`등록 실패: ${data.error}`);
+      }
+    } catch (e: any) {
+      setBatchLogs([`❌ JSON 파싱 에러: ${e.message}`]);
+      alert(`올바른 JSON 형식이 아닙니다: ${e.message}`);
+    } finally {
+      setIsBatchSyncing(false);
+    }
+  };
+
   useEffect(() => {
     fetch('/api/admin/data')
       .then(r => r.json())
@@ -242,6 +309,108 @@ export default function AdminDashboard() {
               앱으로 돌아가기
             </Link>
           </div>
+        </div>
+
+        {/* Batch Sync Accordion Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+          <button 
+            onClick={() => setIsBatchOpen(!isBatchOpen)}
+            type="button"
+            className="w-full px-6 py-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100/50 transition-colors border-b border-gray-100"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-gray-800">🚀 일괄 식당 수집 및 등록 (Batch Sync Console)</span>
+              <span className="px-2 py-0.5 text-[10px] font-bold bg-purple-100 text-purple-700 rounded-full">New Automation</span>
+            </div>
+            <span className="text-sm font-semibold text-gray-500">
+              {isBatchOpen ? '접기 ▲' : '펼치기 ▼'}
+            </span>
+          </button>
+
+          {isBatchOpen && (
+            <div className="p-6 space-y-4 animate-fade-in">
+              <p className="text-xs text-gray-500 leading-relaxed">
+                여러 지점의 식당가 공식 URL을 JSON 리스트로 입력하여 한꺼번에 식당을 크롤링하고 신규 식당 목록을 데이터베이스에 일괄 적재합니다.
+              </p>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* JSON Input Code Editor */}
+                <div className="lg:col-span-8 space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-gray-700">JSON 데이터 입력</span>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={loadBatchTemplate}
+                        type="button"
+                        className="text-xs text-purple-600 hover:text-purple-700 hover:underline font-semibold"
+                      >
+                        📋 기본 템플릿 로드
+                      </button>
+                      <button 
+                        onClick={clearBatchInput}
+                        type="button"
+                        className="text-xs text-gray-500 hover:text-gray-600 hover:underline"
+                      >
+                        비우기
+                      </button>
+                    </div>
+                  </div>
+                  <textarea
+                    value={batchJsonInput}
+                    onChange={(e) => setBatchJsonInput(e.target.value)}
+                    placeholder={`[
+  {
+    "mall_name": "광주신세계",
+    "source_url": "https://www.shinsegae.com/store/restaurant.do?storeCd=SC00010"
+  }
+]`}
+                    className="w-full h-48 px-4 py-3 font-mono text-xs bg-gray-900 text-green-400 rounded-xl border border-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all resize-y shadow-inner"
+                  />
+                </div>
+
+                {/* Sync Controls & Result Console */}
+                <div className="lg:col-span-4 flex flex-col justify-between space-y-4 min-h-[200px]">
+                  <div className="flex-1 bg-gray-50 p-4 rounded-xl border border-gray-200 overflow-y-auto max-h-48 shadow-inner">
+                    <span className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">실행 콘솔 로그</span>
+                    <div className="text-[11px] font-mono text-gray-600 space-y-1">
+                      {batchLogs.length > 0 ? (
+                        batchLogs.map((log, i) => (
+                          <div key={i} className={log.startsWith('▼') || log.startsWith('▲') || log.startsWith('🎉') || log.startsWith('[Console]') ? 'text-purple-600 font-bold' : (log.startsWith('❌') ? 'text-red-500 font-bold' : 'text-gray-600')}>
+                            {log}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-gray-400 italic">대기 중...</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleBatchSync}
+                    disabled={isBatchSyncing || !batchJsonInput.trim()}
+                    type="button"
+                    className={`w-full py-3.5 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${
+                      isBatchSyncing || !batchJsonInput.trim()
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
+                        : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-purple-600/20'
+                    }`}
+                  >
+                    {isBatchSyncing ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        일괄 등록 진행 중...
+                      </>
+                    ) : (
+                      '🚀 일괄 식당 수집 및 등록 시작'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
