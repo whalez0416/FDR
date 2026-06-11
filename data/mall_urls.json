@@ -136,12 +136,12 @@
   },
   {
     "mall_name": "롯데백화점 일산점",
-    "source_url": "https://www.lotteshopping.com/store/main?cstrCd=0011",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0011",
     "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0011"
   },
   {
     "mall_name": "롯데백화점 잠실점",
-    "source_url": "https://www.lotteshopping.com/store/main?cstrCd=0002",
+    "source_url": "https://www.lotteshopping.com/store/dining?cstrCd=0002",
     "facility_url": "https://www.lotteshopping.com/store/convenience?cstrCd=0002"
   },
   {
