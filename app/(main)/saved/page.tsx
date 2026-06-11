@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Bookmark, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { RestaurantItem } from '@/components/restaurant/RestaurantItem';
+import { nursingDistance } from '@/lib/utils/floor';
 import Link from 'next/link';
 
 export default function SavedPage() {
@@ -18,7 +19,7 @@ export default function SavedPage() {
         if (ids.length > 0) {
           const { data } = await supabase
             .from('restaurants')
-            .select('*, malls(name)')
+            .select('*, malls(name, district)')
             .in('id', ids);
           setSavedRestaurants(data || []);
         }
@@ -60,18 +61,21 @@ export default function SavedPage() {
               곧 카카오 로그인과 함께 영구 저장 기능이 열립니다!
             </p>
           </div>
-          {savedRestaurants.map(rest => (
-            <Link key={rest.id} href={`/malls/${rest.mall_id}`} className="block">
-              <RestaurantItem 
-                name={rest.name}
-                category={rest.category || '기타'}
-                rating={4.8}
-                stroller={rest.stroller_accessible}
-                highchair={rest.highchair_available}
-                nursingDist={rest.nursing_room_distance || 0}
-              />
-            </Link>
-          ))}
+          {savedRestaurants.map(rest => {
+            const nd = nursingDistance(rest.floor, rest.malls?.district);
+            return (
+              <Link key={rest.id} href={`/malls/${rest.mall_id}`} className="block">
+                <RestaurantItem
+                  name={rest.name}
+                  category={rest.category || '기타'}
+                  stroller={rest.stroller_accessible}
+                  highchair={rest.highchair_available}
+                  nursingFloor={nd.floorText}
+                  nursingRelative={nd.relative}
+                />
+              </Link>
+            );
+          })}
         </div>
       )}
     </main>

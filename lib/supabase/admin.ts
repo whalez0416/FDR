@@ -1,11 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+// Fall back to placeholders so the module can be imported during `next build`
+// page-data collection even when env vars aren't injected. Real requests at
+// runtime use the real values from the environment.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-// Fallback to avoid build-time crash if key is missing
 export const supabaseAdmin = createClient(
-  supabaseUrl, 
+  supabaseUrl,
   supabaseServiceKey || 'placeholder-key-for-build',
   {
     auth: {

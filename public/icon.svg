@@ -1,0 +1,18 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="256" y1="0" x2="256" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF9A6B"/>
+      <stop offset="1" stop-color="#FF7A45"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <!-- Heart = warmth / parenting care -->
+  <path d="M256 396c-12-9-150-92-150-196 0-52 42-86 88-86 30 0 52 16 62 38 10-22 32-38 62-38 46 0 88 34 88 86 0 104-138 187-150 196z" fill="#FFFFFF"/>
+  <!-- Fork + spoon = dining, cut into the heart -->
+  <g stroke="#FF7A45" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M214 168v44a18 18 0 0 0 36 0v-44"/>
+    <path d="M232 212v92"/>
+    <ellipse cx="300" cy="194" rx="22" ry="30"/>
+    <path d="M300 224v80"/>
+  </g>
+</svg>

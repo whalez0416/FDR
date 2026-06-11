@@ -1,136 +1,167 @@
 import fs from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { HyundaiMallScraper, HYUNDAI_BRANCHES } from '@/lib/sync/hyundaiScraper';
 import { UrlScraper } from '@/lib/sync/urlScraper';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+// Allow up to 60s — we crawl dozens of malls per run.
+export const maxDuration = 60;
+
+const BATCH_SIZE = 5; // how many malls to crawl concurrently
+
+/** Curated mall_name -> source_url map shipped in the repo. */
+function loadCuratedUrls(): Record<string, string> {
+  try {
+    const filePath = path.join(process.cwd(), 'data', 'mall_urls.json');
+    const list = JSON.parse(fs.readFileSync(filePath, 'utf8')) as Array<{
+      mall_name: string;
+      source_url?: string;
+    }>;
+    const map: Record<string, string> = {};
+    for (const e of list) {
+      if (e.mall_name && e.source_url && e.source_url.trim()) map[e.mall_name] = e.source_url.trim();
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const bypass = searchParams.get('bypass') === 'true';
   const authHeader = request.headers.get('authorization');
-  if (process.env.NODE_ENV === 'production' && !bypass && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+
+  // Only enforce the bearer check when a CRON_SECRET is actually configured.
+  // Vercel Cron automatically sends `Authorization: Bearer <CRON_SECRET>` when
+  // the secret is set; without it we let the job run so it works out-of-the-box.
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && !bypass && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  const openai = new OpenAI({ apiKey });
-  const scraper = new HyundaiMallScraper();
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY is missing' }, { status: 401 });
+  }
+
   const urlScraper = new UrlScraper();
 
   try {
-    const { data: malls, error: mallError } = await supabaseAdmin.from('malls').select('id, name, source_url');
+    const { data: malls, error: mallError } = await supabaseAdmin
+      .from('malls')
+      .select('id, name, source_url, district');
     if (mallError) throw mallError;
 
-    let totalNew = 0;
-    let totalUpdated = 0;
+    // Fall back to the curated URL list so malls that never had their source_url
+    // populated in the DB still get crawled (and we backfill the DB on the way).
+    const curated = loadCuratedUrls();
+    const targets = (malls || [])
+      .map((m) => {
+        const effectiveUrl = (m.source_url && m.source_url.trim()) || curated[m.name] || '';
+        return { ...m, effectiveUrl };
+      })
+      .filter((m) => m.effectiveUrl);
+    const skipped = (malls?.length || 0) - targets.length;
 
-    for (const mall of malls) {
-      console.log(`Processing mall: ${mall.name}...`);
-      
-      let scrapedList: any[] = [];
-      const sourceUrl = mall.source_url;
+    let totalUpserted = 0;
+    let totalClosed = 0;
+    const perMall: any[] = [];
 
-      if (sourceUrl) {
-        console.log(`Using custom source URL for ${mall.name}`);
-        const scrapeResult = await urlScraper.scrapeRestaurantsFromUrl(sourceUrl, mall.name);
-        scrapedList = scrapeResult.data || [];
-
-        if (scrapeResult.nursingInfo) {
-          console.log(`[Sync] Updating nursing info for ${mall.name}: ${scrapeResult.nursingInfo}`);
-          await supabaseAdmin.from('malls').update({ district: scrapeResult.nursingInfo }).eq('id', mall.id);
-        }
-      } else {
-        // Track A: Scrape Official Data (Fallback to old Hyundai Scraper logic if no URL)
-        const branchInfo = HYUNDAI_BRANCHES.find(b => b.name === mall.name || mall.name.includes(b.name.replace('현대백화점 ', '')));
-        if (branchInfo) {
-          scrapedList = await scraper.fetchByBranch(branchInfo.name, branchInfo.code);
-        } else {
-          // Fallback to AI discovery
-          const discoverPrompt = `List ALL restaurants in "${mall.name}". JSON format: {"data": [{"name": "...", "category": "...", "floor": "..."}]}`;
-          const discComp = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [{ role: "user", content: discoverPrompt }],
-            response_format: { type: "json_object" }
-          });
-          scrapedList = JSON.parse(discComp.choices[0].message.content || '{"data": []}').data || [];
-        }
-      }
-
-      if (!scrapedList || scrapedList.length === 0) continue;
-
-      // Fetch existing
-      const { data: existingRests } = await supabaseAdmin.from('restaurants').select('id, name, status').eq('mall_id', mall.id);
-      const existingMap = new Map(existingRests?.map(r => [r.name, r]) || []);
-      const scrapedNames = new Set(scrapedList.map(r => r.name));
-
-      // Track B: Enrich new restaurants
-      const newRestaurants = scrapedList.filter(r => !existingMap.has(r.name));
-      if (newRestaurants.length > 0) {
-        const namesToEnrich = newRestaurants.map(r => r.name).join(', ');
-        const enrichPrompt = `
-You are an expert on child-friendly dining. Enrich these restaurants in ${mall.name}: ${namesToEnrich}.
-Provide tags (3-4 hashtags like #아기의자완비, #유모차편한) and a short description for parents.
-Return JSON: {"data": [{"name": "...", "tags": [...], "description": "...", "highchair_available": true/false, "stroller_accessible": true/false}]}
-`;
-        const enrichComp = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: [{ role: "user", content: enrichPrompt }],
-          response_format: { type: "json_object" }
-        });
-        const enrichedData = JSON.parse(enrichComp.choices[0].message.content || '{"data": []}').data || [];
-        
-        // Merge enriched data
-        for (const newRest of newRestaurants) {
-          const enrichInfo = enrichedData.find((e: any) => e.name === newRest.name);
-          if (enrichInfo) {
-            newRest.tags = enrichInfo.tags || [];
-            newRest.description = enrichInfo.description || '';
-            newRest.highchair_available = enrichInfo.highchair_available ?? true;
-            newRest.stroller_accessible = enrichInfo.stroller_accessible ?? true;
-          }
-        }
-      }
-
-      // Upsert scraped & enriched
-      for (const item of scrapedList) {
-        const { error } = await supabaseAdmin
-          .from('restaurants')
-          .upsert({
-            mall_id: mall.id,
-            name: item.name,
-            category: item.category,
-            floor: item.floor,
-            tags: item.tags || [],
-            description: item.description || '',
-            status: 'OPEN',
-            stroller_accessible: item.stroller_accessible ?? true,
-            highchair_available: item.highchair_available ?? true,
-            last_updated: new Date().toISOString()
-          }, { onConflict: 'mall_id, name' });
-
-        if (!error) totalUpdated++;
-      }
-
-      // Mark closed
-      for (const [name, existing] of Array.from(existingMap.entries())) {
-        if (!scrapedNames.has(name) && existing.status !== 'CLOSED') {
-          await supabaseAdmin.from('restaurants').update({ status: 'CLOSED' }).eq('id', existing.id);
-        }
+    // Process in small concurrent batches to stay within the time budget.
+    for (let i = 0; i < targets.length; i += BATCH_SIZE) {
+      const batch = targets.slice(i, i + BATCH_SIZE);
+      const results = await Promise.all(
+        batch.map((mall) => syncMall(mall, urlScraper))
+      );
+      for (const r of results) {
+        totalUpserted += r.upserted;
+        totalClosed += r.closed;
+        perMall.push(r);
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: `Auto-sync completed. Processed ${malls.length} malls.`,
-      updated_count: totalUpdated
+    return NextResponse.json({
+      success: true,
+      message: `Auto-sync completed. Crawled ${targets.length} malls (skipped ${skipped} without source_url).`,
+      upserted_count: totalUpserted,
+      closed_count: totalClosed,
+      details: perMall,
     });
-
   } catch (error: any) {
     console.error('Cron Sync Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+async function syncMall(
+  mall: { id: string; name: string; source_url?: string; district?: string; effectiveUrl: string },
+  urlScraper: UrlScraper
+): Promise<{ mall: string; upserted: number; closed: number; error?: string }> {
+  try {
+    // Backfill the DB source_url when we resolved it from the curated list.
+    if (!mall.source_url && mall.effectiveUrl) {
+      await supabaseAdmin.from('malls').update({ source_url: mall.effectiveUrl }).eq('id', mall.id);
+    }
+
+    const scrapeResult = await urlScraper.scrapeRestaurantsFromUrl(mall.effectiveUrl, mall.name);
+    const scrapedList = scrapeResult.data || [];
+
+    // Persist nursing-room info when the scraper found it and we don't have it yet.
+    if (scrapeResult.nursingInfo && (!mall.district || mall.district === '주요상권')) {
+      await supabaseAdmin.from('malls').update({ district: scrapeResult.nursingInfo }).eq('id', mall.id);
+    }
+
+    // Guard: an empty result usually means a transient fetch failure — never
+    // wipe a mall's existing restaurants on a bad crawl.
+    if (scrapedList.length === 0) {
+      return { mall: mall.name, upserted: 0, closed: 0, error: 'no data scraped' };
+    }
+
+    const { data: existingRests } = await supabaseAdmin
+      .from('restaurants')
+      .select('id, name, status')
+      .eq('mall_id', mall.id);
+    const existingMap = new Map((existingRests || []).map((r) => [r.name, r]));
+    const scrapedNames = new Set(scrapedList.map((r) => r.name));
+
+    let upserted = 0;
+    for (const item of scrapedList) {
+      const existing = existingMap.get(item.name);
+      const payload = {
+        mall_id: mall.id,
+        name: item.name,
+        category: item.category || '전문식당가',
+        floor: item.floor || '정보 없음',
+        status: 'OPEN',
+        last_updated: new Date().toISOString(),
+      };
+      if (existing) {
+        // Update floor/category/status only; keep manually-curated child-friendly fields.
+        await supabaseAdmin.from('restaurants').update(payload).eq('id', existing.id);
+      } else {
+        await supabaseAdmin.from('restaurants').insert({
+          ...payload,
+          stroller_accessible: true,
+          highchair_available: true,
+        });
+      }
+      upserted++;
+    }
+
+    // Mark restaurants that disappeared from the source as CLOSED.
+    let closed = 0;
+    for (const [name, existing] of Array.from(existingMap.entries())) {
+      if (!scrapedNames.has(name) && existing.status !== 'CLOSED') {
+        await supabaseAdmin.from('restaurants').update({ status: 'CLOSED' }).eq('id', existing.id);
+        closed++;
+      }
+    }
+
+    return { mall: mall.name, upserted, closed };
+  } catch (error: any) {
+    console.error(`[Cron] Failed syncing ${mall.name}:`, error);
+    return { mall: mall.name, upserted: 0, closed: 0, error: error.message };
   }
 }

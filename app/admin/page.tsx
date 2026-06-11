@@ -308,6 +308,15 @@ export default function AdminDashboard() {
             <Link href="/" className="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition text-sm">
               앱으로 돌아가기
             </Link>
+            <button
+              onClick={async () => {
+                await fetch('/api/admin/login', { method: 'DELETE' });
+                window.location.href = '/admin/login';
+              }}
+              className="px-4 py-2 bg-white text-gray-500 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition text-sm"
+            >
+              로그아웃
+            </button>
           </div>
         </div>
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { nursingFloorFromText, floorToText } from '@/lib/utils/floor';
 
 interface MallCardProps {
   id: string;
@@ -35,10 +36,15 @@ export const MallCard: React.FC<MallCardProps> = ({ id, name, city, district, im
 
   // 가공된 이름으로 매칭 시도 (불필요한 공백 제거 등)
   const cleanName = name.trim();
-  const nursingInfo = district ||
+  const fallbackInfo =
     nursingRoomMap[cleanName] ||
-    Object.entries(nursingRoomMap).find(([key]) => cleanName.includes(key))?.[1] ||
-    "유아휴게실 완비";
+    Object.entries(nursingRoomMap).find(([key]) => cleanName.includes(key))?.[1];
+
+  // Prefer a clean "수유실 6층" derived from the (possibly verbose) district text.
+  const nursingFloor = nursingFloorFromText(district) ?? nursingFloorFromText(fallbackInfo);
+  const nursingInfo = nursingFloor !== null
+    ? `수유실 ${floorToText(nursingFloor)}`
+    : (district || fallbackInfo || "유아휴게실 완비");
 
   return (
     <Link

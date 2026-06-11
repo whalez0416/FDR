@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { RestaurantItem } from '@/components/restaurant/RestaurantItem';
 import { ReviewSection } from '@/components/restaurant/ReviewSection';
-import { ChevronLeft, Info, Map as MapIcon, Share2, Sparkles, X, Star, Baby, Footprints, MapPin, Phone, Heart, Search } from 'lucide-react';
+import { ChevronLeft, Info, Map as MapIcon, Share2, Sparkles, X, Baby, Footprints, MapPin, Phone, Heart, Search } from 'lucide-react';
 import { Restaurant } from '@/types';
 import { supabase } from '@/lib/supabase/client';
+import { nursingDistance } from '@/lib/utils/floor';
 
 export default function MallDetail({ params }: { params: { id: string } }) {
   const [mall, setMall] = useState<any>(null);
@@ -54,6 +55,8 @@ export default function MallDetail({ params }: { params: { id: string } }) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const mallName = mall?.name || "백화점 정보 로딩 중...";
+  // We only ship a floor map for Pangyo; don't show a misleading map for others.
+  const hasMallMap = (mall?.name || '').includes('판교');
 
   // Normalize floor names to handle inconsistent spacing (e.g., '본관지하1층' -> '본관 지하 1층')
   const normalizeFloor = (floor: string): string => {
@@ -133,17 +136,19 @@ export default function MallDetail({ params }: { params: { id: string } }) {
       <div className="px-8 pt-8 pb-10">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles size={14} className="text-[#FF8A5B]" />
-          <span className="text-[10px] font-bold text-[#FF8A5B] tracking-wider uppercase">Pangyo Guide</span>
+          <span className="text-[10px] font-bold text-[#FF8A5B] tracking-wider uppercase truncate max-w-[260px]">{mallName} Guide</span>
         </div>
         <h2 className="text-3xl font-bold text-[#2D241E] leading-tight mb-6">식당가 가이드</h2>
-        <div className="flex gap-3 mb-8">
-           <button onClick={() => setIsMapOpen(true)} className="flex-1 btn-primary text-sm py-3.5">
-             <MapIcon size={16} /> 몰 지도 보기
-           </button>
-           <button className="w-14 h-14 bg-white rounded-2xl border border-[#F3E9E0] flex items-center justify-center text-[#8D7B6D] active:scale-95">
-             <Info size={20} />
-           </button>
-        </div>
+        {hasMallMap && (
+          <div className="flex gap-3 mb-8">
+             <button onClick={() => setIsMapOpen(true)} className="flex-1 btn-primary text-sm py-3.5">
+               <MapIcon size={16} /> 몰 지도 보기
+             </button>
+             <button className="w-14 h-14 bg-white rounded-2xl border border-[#F3E9E0] flex items-center justify-center text-[#8D7B6D] active:scale-95">
+               <Info size={20} />
+             </button>
+          </div>
+        )}
 
         {/* Search & Category Filter */}
         <div className="space-y-6">
@@ -186,18 +191,21 @@ export default function MallDetail({ params }: { params: { id: string } }) {
                  <div className="h-[1px] flex-1 bg-[#F3E9E0]" />
               </div>
               <div className="grid grid-cols-1 gap-5">
-                {groupedByFloor[floor].map((rest) => (
-                  <div key={rest.id} onClick={() => setSelectedRestaurant(rest)}>
-                    <RestaurantItem 
-                      name={rest.name}
-                      category={rest.category || '기타'}
-                      rating={4.8}
-                      stroller={rest.stroller_accessible}
-                      highchair={rest.highchair_available}
-                      nursingDist={rest.nursing_room_distance || 0}
-                    />
-                  </div>
-                ))}
+                {groupedByFloor[floor].map((rest) => {
+                  const nd = nursingDistance(rest.floor, mall?.district);
+                  return (
+                    <div key={rest.id} onClick={() => setSelectedRestaurant(rest)}>
+                      <RestaurantItem
+                        name={rest.name}
+                        category={rest.category || '기타'}
+                        stroller={rest.stroller_accessible}
+                        highchair={rest.highchair_available}
+                        nursingFloor={nd.floorText}
+                        nursingRelative={nd.relative}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </section>
           ))
@@ -210,11 +218,11 @@ export default function MallDetail({ params }: { params: { id: string } }) {
 
       {/* Reviews */}
       <div className="mt-20 px-8">
-        <ReviewSection restaurantId={params.id} initialScore={4.7} />
+        <ReviewSection restaurantId={params.id} />
       </div>
 
       {/* Map Modal */}
-      {isMapOpen && (
+      {isMapOpen && hasMallMap && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#2D241E]/95 backdrop-blur-xl p-6 animate-fade-in">
           <button onClick={() => setIsMapOpen(false)} className="absolute top-8 right-8 w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-white"><X size={24} /></button>
           <div className="w-full max-w-lg aspect-[4/5] relative rounded-[40px] overflow-hidden shadow-2xl animate-fade-up">
@@ -245,20 +253,21 @@ export default function MallDetail({ params }: { params: { id: string } }) {
                 </div>
                 <h3 className="text-2xl font-bold text-[#2D241E]">{selectedRestaurant.name}</h3>
               </div>
-              <div className="flex items-center gap-1 text-[#FFB800]"><Star size={20} fill="currentColor" /><span className="text-lg font-bold text-[#2D241E]">4.8</span></div>
             </div>
             <div className="grid grid-cols-3 gap-3 mb-8">
                <div className="bg-[#FDF8F4] p-4 rounded-2xl text-center"><Baby size={18} className="mx-auto text-[#FF8A5B] mb-1" /><p className="text-[10px] text-[#8D7B6D]">아기의자</p><p className="text-xs font-bold">{selectedRestaurant.highchair_available ? '있음' : '없음'}</p></div>
                <div className="bg-[#FDF8F4] p-4 rounded-2xl text-center"><Footprints size={18} className="mx-auto text-[#FF8A5B] mb-1" /><p className="text-[10px] text-[#8D7B6D]">유모차</p><p className="text-xs font-bold">진입가능</p></div>
-               <div className="bg-[#FDF8F4] p-4 rounded-2xl text-center"><MapPin size={18} className="mx-auto text-[#FF8A5B] mb-1" /><p className="text-[10px] text-[#8D7B6D]">수유실</p><p className="text-xs font-bold">{selectedRestaurant.nursing_room_distance}m</p></div>
+               <div className="bg-[#FDF8F4] p-4 rounded-2xl text-center"><MapPin size={18} className="mx-auto text-[#FF8A5B] mb-1" /><p className="text-[10px] text-[#8D7B6D]">수유실</p><p className="text-xs font-bold">{nursingDistance(selectedRestaurant.floor, mall?.district).floorText || '정보 없음'}</p>{(() => { const nd = nursingDistance(selectedRestaurant.floor, mall?.district); return nd.relative ? <p className="text-[10px] text-[#FF8A5B] font-medium mt-0.5">{nd.relative}</p> : null; })()}</div>
             </div>
             <div className="space-y-6">
-               <div>
-                  <h4 className="text-sm font-bold text-[#2D241E] mb-3">추천 메뉴</h4>
-                  <div className="space-y-2">
-                     <div className="flex justify-between p-3 bg-[#FDF8F4] rounded-xl text-sm"><span>어린이 추천 세트</span><span className="font-bold text-[#FF8A5B]">12,000원</span></div>
-                  </div>
-               </div>
+               {selectedRestaurant.description && (
+                 <div>
+                    <h4 className="text-sm font-bold text-[#2D241E] mb-3">아이와 함께라면</h4>
+                    <p className="text-sm text-[#8D7B6D] leading-relaxed bg-[#FDF8F4] p-4 rounded-2xl">
+                      {selectedRestaurant.description}
+                    </p>
+                 </div>
+               )}
                <div className="flex gap-3 pt-4">
                   <button className="flex-1 bg-[#2D241E] text-white h-14 rounded-2xl font-bold active:scale-95 flex items-center justify-center gap-2 transition-transform"><Phone size={18} /> 전화 문의하기</button>
                   <button 
