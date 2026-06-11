@@ -97,9 +97,9 @@ export async function POST(request: Request) {
             console.log(`[BatchSync] Successfully extracted facility info: ${facilityText}`);
             await supabaseAdmin
               .from('malls')
-              .update({ district: facilityText })
+              .update({ nursing_room: facilityText })
               .eq('id', mall.id);
-            mall.district = facilityText; // update local object
+            mall.nursing_room = facilityText; // update local object
             facilityInfoText = facilityText;
           }
         } catch (facErr: any) {
@@ -134,10 +134,10 @@ export async function POST(request: Request) {
       console.log(`[BatchSync] Scraped ${scrapedRests.length} restaurants for ${mall_name}`);
 
       // Auto-populate nursing room info if found from restaurant page and not already present via facility page
-      if (scrapeResult?.nursingInfo && (!mall.district || mall.district === '주요상권')) {
+      if (scrapeResult?.nursingInfo && !mall.nursing_room) {
         await supabaseAdmin
           .from('malls')
-          .update({ district: scrapeResult.nursingInfo })
+          .update({ nursing_room: scrapeResult.nursingInfo })
           .eq('id', mall.id);
       }
 

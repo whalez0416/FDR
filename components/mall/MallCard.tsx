@@ -1,50 +1,27 @@
 import React from 'react';
 import Link from 'next/link';
-import { nursingFloorFromText, floorToText } from '@/lib/utils/floor';
+import { nursingFloorFromText, floorToText, nursingText } from '@/lib/utils/floor';
 
 interface MallCardProps {
   id: string;
   name: string;
   city: string;
-  district: string;
+  /** Dedicated nursing-room location (new column). Preferred source. */
+  nursingRoom?: string;
+  /** Legacy district text — only used as a fallback when it clearly describes a
+   *  nursing room (some rows historically stored a location like "성남시 분당구"
+   *  here, which must NOT be shown as nursing info). */
+  district?: string;
   image: string;
 }
 
-export const MallCard: React.FC<MallCardProps> = ({ id, name, city, district, image }) => {
-  const nursingRoomMap: Record<string, string> = {
-    "현대백화점 판교점": "5층 유아휴게실",
-    "더현대 서울": "5층 유아휴게실",
-    "현대백화점 더현대서울점": "5층 유아휴게실",
-    "현대백화점 무역센터점": "4층 유아휴게실",
-    "현대백화점 압구정본점": "5층 유아휴게실",
-    "현대백화점 목동점": "5층 유아휴게실",
-    "현대백화점 신촌점": "6층 유아휴게실",
-    "현대백화점 미아점": "6층 유아휴게실",
-    "현대백화점 천호점": "8층 유아휴게실",
-    "현대백화점 중동점": "6층 유아휴게실",
-    "현대백화점 킨텍스점": "6층 유아휴게실",
-    "현대백화점 부산점": "6층 유아휴게실",
-    "현대백화점 울산점": "7층 유아휴게실",
-    "더현대 대구": "6층 유아휴게실",
-    "현대백화점 충청점": "6층 유아휴게실",
-    "커넥트현대 부산": "6층 유아휴게실",
-    "현대프리미엄아울렛 김포점": "3층 유아휴게실",
-    "현대프리미엄아울렛 송도점": "2층 유아휴게실",
-    "현대프리미엄아울렛 대전점": "3층 유아휴게실",
-    "현대프리미엄아울렛 SPACE 1": "3층 유아휴게실",
-  };
+export const MallCard: React.FC<MallCardProps> = ({ id, name, city, nursingRoom, district, image }) => {
+  const nursingSource = nursingText(nursingRoom, district);
 
-  // 가공된 이름으로 매칭 시도 (불필요한 공백 제거 등)
-  const cleanName = name.trim();
-  const fallbackInfo =
-    nursingRoomMap[cleanName] ||
-    Object.entries(nursingRoomMap).find(([key]) => cleanName.includes(key))?.[1];
-
-  // Prefer a clean "수유실 6층" derived from the (possibly verbose) district text.
-  const nursingFloor = nursingFloorFromText(district) ?? nursingFloorFromText(fallbackInfo);
+  const nursingFloor = nursingFloorFromText(nursingSource);
   const nursingInfo = nursingFloor !== null
     ? `수유실 ${floorToText(nursingFloor)}`
-    : (district || fallbackInfo || "유아휴게실 완비");
+    : (nursingSource.trim() || '유아휴게실 정보 준비중');
 
   return (
     <Link

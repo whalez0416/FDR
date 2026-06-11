@@ -7,7 +7,7 @@ import { ReviewSection } from '@/components/restaurant/ReviewSection';
 import { ChevronLeft, Info, Map as MapIcon, Share2, Sparkles, X, Baby, Footprints, MapPin, Phone, Heart, Search } from 'lucide-react';
 import { Restaurant } from '@/types';
 import { supabase } from '@/lib/supabase/client';
-import { nursingDistance } from '@/lib/utils/floor';
+import { nursingDistance, nursingText } from '@/lib/utils/floor';
 
 export default function MallDetail({ params }: { params: { id: string } }) {
   const [mall, setMall] = useState<any>(null);
@@ -192,7 +192,7 @@ export default function MallDetail({ params }: { params: { id: string } }) {
               </div>
               <div className="grid grid-cols-1 gap-5">
                 {groupedByFloor[floor].map((rest) => {
-                  const nd = nursingDistance(rest.floor, mall?.district);
+                  const nd = nursingDistance(rest.floor, nursingText(mall?.nursing_room, mall?.district));
                   return (
                     <div key={rest.id} onClick={() => setSelectedRestaurant(rest)}>
                       <RestaurantItem
@@ -257,7 +257,7 @@ export default function MallDetail({ params }: { params: { id: string } }) {
             <div className="grid grid-cols-3 gap-3 mb-8">
                <div className="bg-[#FDF8F4] p-4 rounded-2xl text-center"><Baby size={18} className="mx-auto text-[#FF8A5B] mb-1" /><p className="text-[10px] text-[#8D7B6D]">아기의자</p><p className="text-xs font-bold">{selectedRestaurant.highchair_available ? '있음' : '없음'}</p></div>
                <div className="bg-[#FDF8F4] p-4 rounded-2xl text-center"><Footprints size={18} className="mx-auto text-[#FF8A5B] mb-1" /><p className="text-[10px] text-[#8D7B6D]">유모차</p><p className="text-xs font-bold">{selectedRestaurant.stroller_accessible ? '진입가능' : '협소'}</p></div>
-               <div className="bg-[#FDF8F4] p-4 rounded-2xl text-center"><MapPin size={18} className="mx-auto text-[#FF8A5B] mb-1" /><p className="text-[10px] text-[#8D7B6D]">수유실</p><p className="text-xs font-bold">{nursingDistance(selectedRestaurant.floor, mall?.district).floorText || '정보 없음'}</p>{(() => { const nd = nursingDistance(selectedRestaurant.floor, mall?.district); return nd.relative ? <p className="text-[10px] text-[#FF8A5B] font-medium mt-0.5">{nd.relative}</p> : null; })()}</div>
+               <div className="bg-[#FDF8F4] p-4 rounded-2xl text-center"><MapPin size={18} className="mx-auto text-[#FF8A5B] mb-1" /><p className="text-[10px] text-[#8D7B6D]">수유실</p><p className="text-xs font-bold">{nursingDistance(selectedRestaurant.floor, nursingText(mall?.nursing_room, mall?.district)).floorText || '정보 없음'}</p>{(() => { const nd = nursingDistance(selectedRestaurant.floor, nursingText(mall?.nursing_room, mall?.district)); return nd.relative ? <p className="text-[10px] text-[#FF8A5B] font-medium mt-0.5">{nd.relative}</p> : null; })()}</div>
             </div>
             <div className="space-y-6">
                {selectedRestaurant.description && (

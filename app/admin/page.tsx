@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-type Mall = { id: string; name: string; source_url?: string; district?: string };
+type Mall = { id: string; name: string; source_url?: string; district?: string; nursing_room?: string };
 type Restaurant = {
   id: string;
   mall_id: string;
@@ -469,17 +469,17 @@ export default function AdminDashboard() {
               {/* Input 2: Nursing room location */}
               <div className="lg:col-span-4 bg-white p-3 rounded-xl border border-gray-200 shadow-sm relative">
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  유아휴게실(수유실) 위치 정보 <span className="text-[10px] text-purple-500 font-medium">(district 컬럼)</span>
+                  유아휴게실(수유실) 위치 정보 <span className="text-[10px] text-purple-500 font-medium">(nursing_room 컬럼)</span>
                 </label>
                 <div className="flex gap-2 items-center">
                   <input
                     type="text"
-                    value={malls.find(m => m.id === selectedMallId)?.district || ''}
+                    value={malls.find(m => m.id === selectedMallId)?.nursing_room || ''}
                     onChange={(e) => {
                       const val = e.target.value;
-                      setMalls(prev => prev.map(m => m.id === selectedMallId ? { ...m, district: val } : m));
+                      setMalls(prev => prev.map(m => m.id === selectedMallId ? { ...m, nursing_room: val } : m));
                     }}
-                    onBlur={(e) => selectedMallId && handleMallUpdate(selectedMallId, { district: e.target.value })}
+                    onBlur={(e) => selectedMallId && handleMallUpdate(selectedMallId, { nursing_room: e.target.value })}
                     placeholder="예: 6층 서비스라운지 옆, 본관 4층 유아휴게실"
                     className="flex-1 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
                   />

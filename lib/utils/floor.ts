@@ -54,6 +54,23 @@ export function nursingFloorFromText(text: string | null | undefined): number | 
   return parseFloor(text);
 }
 
+/**
+ * Resolve the nursing-room text for a mall, preferring the dedicated
+ * `nursing_room` column and falling back to the legacy `district` text ONLY when
+ * it actually describes a nursing room (some rows stored a location like
+ * "성남시 분당구" in district, which must never be shown/parsed as nursing info).
+ */
+export function nursingText(
+  primary?: string | null,
+  legacyDistrict?: string | null
+): string {
+  if (primary && primary.trim()) return primary.trim();
+  if (legacyDistrict && /(유아휴게실|수유실|아기쉼터|유아휴게|아기방)/.test(legacyDistrict)) {
+    return legacyDistrict.trim();
+  }
+  return '';
+}
+
 export type NursingDistance = {
   /** Absolute floor of the nursing room, e.g. "6층". Empty when unknown. */
   floorText: string;

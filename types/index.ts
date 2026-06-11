@@ -3,6 +3,9 @@ export type Mall = {
   name: string;
   city: string;
   district: string;
+  /** Dedicated nursing-room location, e.g. "5층 유아휴게실". Replaces the
+   *  overloaded use of `district` for this purpose. */
+  nursing_room?: string;
   address?: string;
   image_url: string;
   source_url?: string;

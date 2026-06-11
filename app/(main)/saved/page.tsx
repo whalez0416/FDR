@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Bookmark, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { RestaurantItem } from '@/components/restaurant/RestaurantItem';
-import { nursingDistance } from '@/lib/utils/floor';
+import { nursingDistance, nursingText } from '@/lib/utils/floor';
 import Link from 'next/link';
 
 export default function SavedPage() {
@@ -19,7 +19,7 @@ export default function SavedPage() {
         if (ids.length > 0) {
           const { data } = await supabase
             .from('restaurants')
-            .select('*, malls(name, district)')
+            .select('*, malls(name, district, nursing_room)')
             .in('id', ids);
           setSavedRestaurants(data || []);
         }
@@ -62,7 +62,7 @@ export default function SavedPage() {
             </p>
           </div>
           {savedRestaurants.map(rest => {
-            const nd = nursingDistance(rest.floor, rest.malls?.district);
+            const nd = nursingDistance(rest.floor, nursingText(rest.malls?.nursing_room, rest.malls?.district));
             return (
               <Link key={rest.id} href={`/malls/${rest.mall_id}`} className="block">
                 <RestaurantItem

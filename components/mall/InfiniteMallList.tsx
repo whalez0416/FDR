@@ -116,11 +116,12 @@ export const InfiniteMallList: React.FC<InfiniteMallListProps> = ({ initialMalls
       {malls.length > 0 ? (
         <div className="grid grid-cols-1 gap-6">
           {malls.map((mall) => (
-            <MallCard 
-              key={mall.id} 
+            <MallCard
+              key={mall.id}
               id={mall.id}
               name={mall.name}
               city={mall.city}
+              nursingRoom={mall.nursing_room}
               district={mall.district}
               image={mall.image_url || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800'}
             />

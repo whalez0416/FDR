@@ -51,7 +51,7 @@ export async function GET(request: Request) {
   try {
     const { data: malls, error: mallError } = await supabaseAdmin
       .from('malls')
-      .select('id, name, source_url, district');
+      .select('id, name, source_url, district, nursing_room');
     if (mallError) throw mallError;
 
     // Fall back to the curated URL list so malls that never had their source_url
@@ -115,7 +115,7 @@ export async function GET(request: Request) {
 }
 
 async function syncMall(
-  mall: { id: string; name: string; source_url?: string; district?: string; effectiveUrl: string },
+  mall: { id: string; name: string; source_url?: string; district?: string; nursing_room?: string; effectiveUrl: string },
   urlScraper: UrlScraper
 ): Promise<{ mall: string; upserted: number; closed: number; error?: string }> {
   try {
@@ -127,9 +127,9 @@ async function syncMall(
     const scrapeResult = await urlScraper.scrapeRestaurantsFromUrl(mall.effectiveUrl, mall.name);
     const scrapedList = scrapeResult.data || [];
 
-    // Persist nursing-room info when the scraper found it and we don't have it yet.
-    if (scrapeResult.nursingInfo && (!mall.district || mall.district === '주요상권')) {
-      await supabaseAdmin.from('malls').update({ district: scrapeResult.nursingInfo }).eq('id', mall.id);
+    // Persist nursing-room info into its dedicated column when found and missing.
+    if (scrapeResult.nursingInfo && !mall.nursing_room) {
+      await supabaseAdmin.from('malls').update({ nursing_room: scrapeResult.nursingInfo }).eq('id', mall.id);
     }
 
     // Guard: an empty result usually means a transient fetch failure — never
