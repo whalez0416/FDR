@@ -69,8 +69,21 @@ export async function GET(request: Request) {
     let totalClosed = 0;
     const perMall: any[] = [];
 
-    // Process in small concurrent batches to stay within the time budget.
+    // Rotate the starting point each day so coverage cycles through every mall
+    // even if a single run can't finish them all.
+    if (targets.length > 0) {
+      const dayOffset = Math.floor(Date.now() / 86_400_000) % targets.length;
+      targets.push(...targets.splice(0, dayOffset));
+    }
+
+    // Hard time budget: stop launching new work before Vercel's 60s ceiling so
+    // we return a clean partial result instead of a 504. Bulk writes mean a full
+    // crawl normally fits, but this guarantees we never error out.
+    const startedAt = Date.now();
+    const TIME_BUDGET_MS = 50_000;
+    let processed = 0;
     for (let i = 0; i < targets.length; i += BATCH_SIZE) {
+      if (Date.now() - startedAt > TIME_BUDGET_MS) break;
       const batch = targets.slice(i, i + BATCH_SIZE);
       const results = await Promise.all(
         batch.map((mall) => syncMall(mall, urlScraper))
@@ -80,11 +93,17 @@ export async function GET(request: Request) {
         totalClosed += r.closed;
         perMall.push(r);
       }
+      processed += batch.length;
     }
+    const skippedForTime = targets.length - processed;
 
     return NextResponse.json({
       success: true,
-      message: `Auto-sync completed. Crawled ${targets.length} malls (skipped ${skipped} without source_url).`,
+      message:
+        `Auto-sync completed. Crawled ${processed}/${targets.length} malls` +
+        ` (skipped ${skipped} without source_url` +
+        (skippedForTime > 0 ? `, ${skippedForTime} deferred to next run for time` : '') +
+        `).`,
       upserted_count: totalUpserted,
       closed_count: totalClosed,
       details: perMall,
@@ -125,41 +144,49 @@ async function syncMall(
       .eq('mall_id', mall.id);
     const existingMap = new Map((existingRests || []).map((r) => [r.name, r]));
     const scrapedNames = new Set(scrapedList.map((r) => r.name));
+    const now = new Date().toISOString();
 
-    let upserted = 0;
-    for (const item of scrapedList) {
-      const existing = existingMap.get(item.name);
-      const payload = {
+    // --- Bulk DB writes (was per-restaurant before → a 75-item mall took ~150
+    // round-trips and blew past the 60s budget). Now ~3 calls per mall. ---
+
+    // 1) Brand-new restaurants → one bulk insert.
+    const newRows = scrapedList
+      .filter((item) => !existingMap.has(item.name))
+      .map((item) => ({
         mall_id: mall.id,
         name: item.name,
         category: item.category || '전문식당가',
         floor: item.floor || '정보 없음',
         status: 'OPEN',
-        last_updated: new Date().toISOString(),
-      };
-      if (existing) {
-        // Update floor/category/status only; keep manually-curated child-friendly fields.
-        await supabaseAdmin.from('restaurants').update(payload).eq('id', existing.id);
-      } else {
-        await supabaseAdmin.from('restaurants').insert({
-          ...payload,
-          stroller_accessible: true,
-          highchair_available: true,
-        });
-      }
-      upserted++;
+        last_updated: now,
+        stroller_accessible: true,
+        highchair_available: true,
+      }));
+    if (newRows.length) {
+      await supabaseAdmin.from('restaurants').insert(newRows);
     }
 
-    // Mark restaurants that disappeared from the source as CLOSED.
-    let closed = 0;
-    for (const [name, existing] of Array.from(existingMap.entries())) {
-      if (!scrapedNames.has(name) && existing.status !== 'CLOSED') {
-        await supabaseAdmin.from('restaurants').update({ status: 'CLOSED' }).eq('id', existing.id);
-        closed++;
-      }
+    // 2) Existing & still-listed → one bulk update to (re)open + refresh timestamp.
+    //    This also recovers rows a previous bad crawl wrongly marked CLOSED.
+    const stillListedIds = scrapedList
+      .map((item) => existingMap.get(item.name)?.id)
+      .filter((id): id is string => Boolean(id));
+    if (stillListedIds.length) {
+      await supabaseAdmin
+        .from('restaurants')
+        .update({ status: 'OPEN', last_updated: now })
+        .in('id', stillListedIds);
     }
 
-    return { mall: mall.name, upserted, closed };
+    // 3) Disappeared from the source → one bulk update to CLOSED.
+    const closedIds = Array.from(existingMap.values())
+      .filter((r) => !scrapedNames.has(r.name) && r.status !== 'CLOSED')
+      .map((r) => r.id);
+    if (closedIds.length) {
+      await supabaseAdmin.from('restaurants').update({ status: 'CLOSED' }).in('id', closedIds);
+    }
+
+    return { mall: mall.name, upserted: newRows.length + stillListedIds.length, closed: closedIds.length };
   } catch (error: any) {
     console.error(`[Cron] Failed syncing ${mall.name}:`, error);
     return { mall: mall.name, upserted: 0, closed: 0, error: error.message };
