@@ -11,8 +11,6 @@ interface ReviewCreateModalProps {
 }
 
 const FACT_CHECK_OPTIONS = [
-  { id: 'stroller', label: '유모차 진입 수월', icon: '👶' },
-  { id: 'chair', label: '아기의자 넉넉함', icon: '🪑' },
   { id: 'space', label: '좌석 간격 넓음', icon: '↔️' },
   { id: 'nursing', label: '수유실 가까움', icon: '🍼' },
 ];

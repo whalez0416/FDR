@@ -1,5 +1,9 @@
 [
   {
+    "mall_name": "타임스퀘어 영등포",
+    "source_url": "https://www.timessquare.co.kr/web/www/floor-info"
+  },
+  {
     "mall_name": "광주신세계",
     "source_url": "https://www.shinsegae.com/store/restaurant.do?storeCd=SC00006#focus_move",
     "facility_url": "https://www.shinsegae.com/store/facility.do?storeCd=SC00006#focus_move"

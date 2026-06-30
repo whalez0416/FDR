@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { RestaurantItem } from '@/components/restaurant/RestaurantItem';
 import { ReviewSection } from '@/components/restaurant/ReviewSection';
-import { ChevronLeft, Info, Map as MapIcon, Share2, Sparkles, X, Baby, Footprints, MapPin, Phone, Heart, Search } from 'lucide-react';
+import { ChevronLeft, Info, Map as MapIcon, Share2, Sparkles, X, MapPin, Phone, Heart, Search } from 'lucide-react';
 import { Restaurant } from '@/types';
 import { supabase } from '@/lib/supabase/client';
 import { nursingDistance, nursingText } from '@/lib/utils/floor';
@@ -198,8 +198,6 @@ export default function MallDetail({ params }: { params: { id: string } }) {
                       <RestaurantItem
                         name={rest.name}
                         category={rest.category || '기타'}
-                        stroller={rest.stroller_accessible}
-                        highchair={rest.highchair_available}
                         nursingFloor={nd.floorText}
                         nursingRelative={nd.relative}
                       />
@@ -245,18 +243,11 @@ export default function MallDetail({ params }: { params: { id: string } }) {
                       #{cat.trim()}
                     </span>
                   ))}
-                  {selectedRestaurant.highchair_available && (
-                    <span className="text-[12px] text-[#FFB800] font-bold bg-[#FFB800]/10 px-2.5 py-1 rounded-md">
-                      #예스키즈존
-                    </span>
-                  )}
                 </div>
                 <h3 className="text-2xl font-bold text-[#2D241E]">{selectedRestaurant.name}</h3>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3 mb-8">
-               <div className="bg-[#FDF8F4] p-4 rounded-2xl text-center"><Baby size={18} className="mx-auto text-[#FF8A5B] mb-1" /><p className="text-[10px] text-[#8D7B6D]">아기의자</p><p className="text-xs font-bold">{selectedRestaurant.highchair_available ? '있음' : '없음'}</p></div>
-               <div className="bg-[#FDF8F4] p-4 rounded-2xl text-center"><Footprints size={18} className="mx-auto text-[#FF8A5B] mb-1" /><p className="text-[10px] text-[#8D7B6D]">유모차</p><p className="text-xs font-bold">{selectedRestaurant.stroller_accessible ? '진입가능' : '협소'}</p></div>
+            <div className="grid grid-cols-1 gap-3 mb-8">
                <div className="bg-[#FDF8F4] p-4 rounded-2xl text-center"><MapPin size={18} className="mx-auto text-[#FF8A5B] mb-1" /><p className="text-[10px] text-[#8D7B6D]">수유실</p><p className="text-xs font-bold">{nursingDistance(selectedRestaurant.floor, nursingText(mall?.nursing_room, mall?.district)).floorText || '정보 없음'}</p>{(() => { const nd = nursingDistance(selectedRestaurant.floor, nursingText(mall?.nursing_room, mall?.district)); return nd.relative ? <p className="text-[10px] text-[#FF8A5B] font-medium mt-0.5">{nd.relative}</p> : null; })()}</div>
             </div>
             <div className="space-y-6">

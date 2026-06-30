@@ -50,6 +50,9 @@ export class UrlScraper {
     if (url.includes('ehyundai.com')) {
       return this.scrapeHyundai(url, mallName);
     }
+    if (url.includes('timessquare.co.kr')) {
+      return this.scrapeTimesSquare(url, mallName);
+    }
     return this.scrapeGeneric(url, mallName);
   }
 
@@ -185,6 +188,84 @@ export class UrlScraper {
       return { data: restaurants, nursingInfo: null };
     } catch (error) {
       console.error(`[UrlScraper] Error scraping Shinsegae AJAX:`, error);
+      return { data: [], nursingInfo: null };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Times Square (영등포, 경방) — a Liferay portal. The dining list comes from a
+  // paginated JSON resource endpoint (StorePortlet `get_stores`, 4 stores per
+  // page) filtered by the "EAT" top category (categoryId 2). We page through
+  // `cur` until `hasNext` is false. URL passed in is ignored — the endpoint is
+  // fixed — it only serves to route here from scrapeRestaurantsFromUrl.
+  // ---------------------------------------------------------------------------
+  async scrapeTimesSquare(_url: string, mallName: string): Promise<ScrapeResult> {
+    const PORTLET = 'kr_co_timessquare_store_web_portlet_StorePortlet';
+    const endpoint =
+      'https://www.timessquare.co.kr/web/www/floor-info' +
+      `?p_p_id=${PORTLET}&p_p_lifecycle=2&p_p_state=normal&p_p_mode=view` +
+      `&p_p_cacheability=cacheLevelPage&_${PORTLET}_cmd=get_stores`;
+    const EAT_CATEGORY_ID = 2;
+    const MAX_PAGES = 60; // safety cap (~77 stores / 4 per page ≈ 20 pages)
+
+    try {
+      const items: ScrapedItem[] = [];
+      const seen = new Set<string>();
+
+      for (let cur = 1; cur <= MAX_PAGES; cur++) {
+        const filter = JSON.stringify({
+          floorIds: [],
+          categoryIds: [EAT_CATEGORY_ID],
+          hasEvent: false,
+          favorite: false,
+          cur,
+        });
+        const body = new URLSearchParams({ [`_${PORTLET}_params`]: filter });
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            ...BROWSER_HEADERS,
+            Accept: 'application/json, text/javascript, */*',
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-Requested-With': 'XMLHttpRequest',
+            Referer: 'https://www.timessquare.co.kr/web/www/floor-info',
+          },
+          body,
+          cache: 'no-store',
+        });
+        if (!response.ok) break;
+
+        const json = (await response.json()) as {
+          stores?: Array<{
+            storeName?: string;
+            floorNames?: string;
+            categoryNames?: string;
+            phone1?: string;
+          }>;
+          hasNext?: boolean;
+        };
+
+        for (const s of json.stores || []) {
+          const name = (s.storeName || '').replace(/\s+/g, ' ').trim();
+          if (!name || seen.has(name)) continue;
+          seen.add(name);
+          items.push({
+            name,
+            category: (s.categoryNames || '식당').replace(/\s+/g, ' ').trim(),
+            floor: (s.floorNames || '정보 없음').trim(),
+            phone: (s.phone1 || '').trim() || undefined,
+          });
+        }
+
+        if (!json.hasNext) break;
+        await new Promise((r) => setTimeout(r, 120));
+      }
+
+      console.log(`[UrlScraper] TimesSquare parsed ${items.length} restaurants for ${mallName}`);
+      return { data: items, nursingInfo: null };
+    } catch (error) {
+      console.error(`[UrlScraper] TimesSquare parse error for ${mallName}:`, error);
       return { data: [], nursingInfo: null };
     }
   }

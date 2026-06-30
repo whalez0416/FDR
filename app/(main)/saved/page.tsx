@@ -68,8 +68,6 @@ export default function SavedPage() {
                 <RestaurantItem
                   name={rest.name}
                   category={rest.category || '기타'}
-                  stroller={rest.stroller_accessible}
-                  highchair={rest.highchair_available}
                   nursingFloor={nd.floorText}
                   nursingRelative={nd.relative}
                 />
