@@ -36,6 +36,7 @@
 - ✅ **신세계백화점 12곳** — 등록 완료 (대전 Art&Science 제외)
 - ✅ **현대백화점 14곳 + 현대아울렛/시티** — 등록 완료 (과거 CLOSED 재오픈 포함)
 - ✅ **타임스퀘어 영등포(경방)** — 전용 스크래퍼 추가(`scrapeTimesSquare`, EAT 카테고리 77곳). Liferay `StorePortlet get_stores` JSON 엔드포인트 페이지네이션(4개/page). curated 목록 등록 완료
+- ✅ **신세계사이먼 프리미엄아울렛 5곳(여주·파주·부산·시흥·제주)** — 전용 스크래퍼(`scrapeShinsegaeSimon`). `/api/brand` 단일 JSON에 전 지점 브랜드. **식음료 전용 카테고리가 없어** 카테고리 11("기타")로 1차 필터 후 **GPT(gpt-4o-mini)로 먹는 곳만 분류**(아울렛은 안내센터/올리브영/다이소 등 비식당이 기타에 섞임). storeCode 매핑 yeoju01·paju02·busan03·siheung05·jeju06
 - ✅ 위 전부 **매일 자동 동기화(cron)** 대상
 
 ## 미착수(전용 스크래퍼 필요 → 코드 작성+배포 필요)
@@ -45,7 +46,7 @@
 | 스타필드(하남·고양·안성·수원·코엑스몰) | Vue SPA | 내부 XHR API 역설계 필요. 하남 백화점부는 SC00012로 이미 수록 |
 | 갤러리아(명품관·타임월드·광교·센터시티·진주) | 조사 필요 | 5~6곳 |
 | AK플라자(분당·수원·평택·원주·금정·세종 등) | `/ajax/html/getMainStore` AJAX 존재 | 비교적 수월할 가능성 |
-| 신세계사이먼 프리미엄아울렛 | premiumoutlets.co.kr | 별도 |
+| ~~신세계사이먼 프리미엄아울렛~~ | premiumoutlets.co.kr | ✅ 완료 (scrapeShinsegaeSimon) |
 | IFC몰·롯데월드몰 등 복합몰 | 제각각 | 개별 작업 (~~타임스퀘어~~ 완료) |
 
 → 이들은 `lib/sync/urlScraper.ts`에 호스트별 분기 추가 + 배포 필요. 신규 브랜드는 generic GPT 경로(OPENAI_API_KEY 필요)로 임시 시도 가능하나 품질 불확실.

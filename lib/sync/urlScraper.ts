@@ -53,6 +53,9 @@ export class UrlScraper {
     if (url.includes('timessquare.co.kr')) {
       return this.scrapeTimesSquare(url, mallName);
     }
+    if (url.includes('premiumoutlets.co.kr')) {
+      return this.scrapeShinsegaeSimon(url, mallName);
+    }
     return this.scrapeGeneric(url, mallName);
   }
 
@@ -267,6 +270,121 @@ export class UrlScraper {
     } catch (error) {
       console.error(`[UrlScraper] TimesSquare parse error for ${mallName}:`, error);
       return { data: [], nursingInfo: null };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Shinsegae Simon Premium Outlets (여주·파주·부산·시흥·제주) — one Vue app
+  // serves every outlet from a single /api/brand JSON feed (~1000 brands, all
+  // locations). There is NO dining category: eateries sit in category 11
+  // ("기타") alongside a handful of non-food services (info desks, Olive Young,
+  // Daiso, pop-ups…). Brand names alone can't reliably separate them, so we
+  // pre-filter to category 11 for the requested outlet, then let GPT keep only
+  // the actual restaurants/cafes — accurate classification, no fabricated data.
+  // Outlet is identified by the storeCode in the URL (…/main/index/<storeCode>).
+  // ---------------------------------------------------------------------------
+  private static readonly SIMON_STORE_CODES: Record<string, string> = {
+    '01': 'yeoju',
+    '02': 'paju',
+    '03': 'busan',
+    '05': 'siheung',
+    '06': 'jeju',
+  };
+  private static readonly SIMON_DINING_CATEGORY_NO = 11; // "기타" — holds the eateries
+
+  async scrapeShinsegaeSimon(url: string, mallName: string): Promise<ScrapeResult> {
+    try {
+      const codeMatch = url.match(/index\/(\d+)/);
+      const storeCode = codeMatch ? codeMatch[1] : '';
+      const area = UrlScraper.SIMON_STORE_CODES[storeCode];
+      if (!area) throw new Error(`Unknown Shinsegae Simon storeCode in URL: ${url}`);
+
+      const response = await fetch('https://www.premiumoutlets.co.kr/api/brand', {
+        headers: { ...BROWSER_HEADERS, Accept: 'application/json, */*' },
+        cache: 'no-store',
+      });
+      if (!response.ok) throw new Error(`Simon /api/brand HTTP ${response.status}`);
+
+      const brands = (await response.json()) as Array<{
+        brandKorean?: string;
+        brandArea?: string;
+        brandAreaEnglish?: string;
+        brandTel?: string;
+        area?: string;
+        categoryList?: Array<{ brandCategoryNo?: number }>;
+      }>;
+
+      const candidates = brands.filter(
+        (b) =>
+          b.area === area &&
+          (b.categoryList || []).some((c) => c.brandCategoryNo === UrlScraper.SIMON_DINING_CATEGORY_NO)
+      );
+      if (candidates.length === 0) return { data: [], nursingInfo: null };
+
+      const foodNames = await this.classifyFoodBrands(
+        candidates.map((b) => (b.brandKorean || '').trim()).filter(Boolean),
+        mallName
+      );
+      const keep = new Set(foodNames);
+
+      const items: ScrapedItem[] = [];
+      const seen = new Set<string>();
+      for (const b of candidates) {
+        const name = (b.brandKorean || '').replace(/\s+/g, ' ').trim();
+        if (!name || seen.has(name) || !keep.has(name)) continue;
+        seen.add(name);
+        const isCafe = /커피|카페|coffee|베이커리|도넛|디저트|젤라|빙수|호두과자|케이크/.test(name);
+        items.push({
+          name,
+          category: isCafe ? '카페/디저트' : '식당',
+          floor: (b.brandArea || b.brandAreaEnglish || '정보 없음').trim(),
+          phone: (b.brandTel || '').trim() || undefined,
+        });
+      }
+
+      console.log(`[UrlScraper] Shinsegae Simon (${area}) parsed ${items.length}/${candidates.length} eateries for ${mallName}`);
+      return { data: items, nursingInfo: null };
+    } catch (error) {
+      console.error(`[UrlScraper] Shinsegae Simon parse error for ${mallName}:`, error);
+      return { data: [], nursingInfo: null };
+    }
+  }
+
+  /**
+   * Classify a list of outlet brand names, returning only the ones that are
+   * places to eat or drink (restaurant / cafe / bakery / dessert / food court).
+   * Used by the Shinsegae Simon parser where dining isn't its own category.
+   * On any failure returns [] so the caller skips this mall rather than
+   * registering mislabeled data.
+   */
+  private async classifyFoodBrands(names: string[], mallName: string): Promise<string[]> {
+    if (names.length === 0) return [];
+    try {
+      const prompt = `다음은 "${mallName}"(신세계사이먼 프리미엄아울렛)의 "기타" 카테고리 브랜드 목록이다.
+이 중 **사람이 먹거나 마시는 곳**(식당·레스토랑·카페·베이커리·디저트·푸드코트·분식 등)만 골라라.
+패션/화장품(올리브영 등)/잡화/전자제품/안내센터/팝업스토어/마트/마켓/전시 등 먹는 곳이 아닌 것은 모두 제외한다.
+
+브랜드 목록:
+${names.map((n) => `- ${n}`).join('\n')}
+
+반드시 아래 JSON 형식으로만 답하라. 먹는 곳의 이름을 원본 그대로 넣어라:
+{"food": ["이름1", "이름2"]}`;
+
+      const completion = await this.getOpenai().chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'You are a precise classifier. Respond only with the requested JSON object.' },
+          { role: 'user', content: prompt },
+        ],
+        response_format: { type: 'json_object' },
+      });
+
+      const parsed = JSON.parse(completion.choices[0].message.content || '{"food":[]}') as { food?: string[] };
+      const allowed = new Set(names);
+      return (parsed.food || []).filter((n) => allowed.has(n)); // guard against hallucinated names
+    } catch (error) {
+      console.error(`[UrlScraper] Shinsegae Simon food classification failed for ${mallName}:`, error);
+      return [];
     }
   }
 
