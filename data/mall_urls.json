@@ -452,5 +452,41 @@
     "mall_name": "현대프리미엄아울렛 송도점",
     "source_url": "",
     "facility_url": ""
+  },
+  {
+    "mall_name": "AK플라자 수원점",
+    "source_url": "https://www.akplaza.com/store/floor?store=02"
+  },
+  {
+    "mall_name": "AK플라자 분당점",
+    "source_url": "https://www.akplaza.com/store/floor?store=03"
+  },
+  {
+    "mall_name": "AK플라자 평택점",
+    "source_url": "https://www.akplaza.com/store/floor?store=04"
+  },
+  {
+    "mall_name": "AK플라자 원주점",
+    "source_url": "https://www.akplaza.com/store/floor?store=05"
+  },
+  {
+    "mall_name": "AK플라자 광명점",
+    "source_url": "https://www.akplaza.com/store/floor?store=11"
+  },
+  {
+    "mall_name": "AK플라자 금정점",
+    "source_url": "https://www.akplaza.com/store/floor?store=12"
+  },
+  {
+    "mall_name": "AK플라자 홍대점",
+    "source_url": "https://www.akplaza.com/store/floor?store=51"
+  },
+  {
+    "mall_name": "AK플라자 기흥점",
+    "source_url": "https://www.akplaza.com/store/floor?store=52"
+  },
+  {
+    "mall_name": "AK플라자 세종점",
+    "source_url": "https://www.akplaza.com/store/floor?store=53"
   }
 ]

@@ -56,6 +56,9 @@ export class UrlScraper {
     if (url.includes('premiumoutlets.co.kr')) {
       return this.scrapeShinsegaeSimon(url, mallName);
     }
+    if (url.includes('akplaza.com')) {
+      return this.scrapeAkPlaza(url, mallName);
+    }
     return this.scrapeGeneric(url, mallName);
   }
 
@@ -346,6 +349,86 @@ export class UrlScraper {
       return { data: items, nursingInfo: null };
     } catch (error) {
       console.error(`[UrlScraper] Shinsegae Simon parse error for ${mallName}:`, error);
+      return { data: [], nursingInfo: null };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // AK Plaza (AK& / AK플라자) — the floor guide loads each floor's brands via
+  // `/ajax/html/getFloorDetailHtml?branchCode=XX&categoryCode=2&seq=N`, one
+  // call per floor tab. Each floor's HTML groups brands under <article> blocks
+  // whose <h3> names the category ("F&B", "전문식당가", "카페"…); we keep only
+  // the food categories. Floor seqs differ per branch, so we first read the
+  // floor page (`/store/floor?store=XX`) and scrape the callFloorDetail('N')
+  // handlers to collect them. Fully server-rendered — no GPT needed. The branch
+  // code comes from `store=` in the URL.
+  // ---------------------------------------------------------------------------
+  async scrapeAkPlaza(url: string, mallName: string): Promise<ScrapeResult> {
+    const AK_ORIGIN = 'https://www.akplaza.com';
+    // A category is food when its <h3> label names a place to eat or drink.
+    // Kids' cafes are play facilities, not dining, so they're excluded.
+    const isFoodCategory = (label: string): boolean => {
+      if (/키즈\s*카페/.test(label)) return false;
+      if (/F\s*&\s*B/i.test(label)) return true;
+      return /식당|레스토랑|델리|다이닝|푸드|베이커리|디저트|분식|스낵|카페|커피|맛집|다과/.test(label);
+    };
+
+    try {
+      const branchCode = url.match(/store=(\d+)/)?.[1] || '';
+      if (!branchCode) throw new Error(`AK Plaza: no store code in URL: ${url}`);
+      const floorPageUrl = `${AK_ORIGIN}/store/floor?store=${branchCode}`;
+
+      // 1) Floor page → the seq of every floor tab (callFloorDetail('N')).
+      const floorPage = await fetch(floorPageUrl, { headers: BROWSER_HEADERS, cache: 'no-store' });
+      if (!floorPage.ok) throw new Error(`AK Plaza floor page HTTP ${floorPage.status}`);
+      const floorHtml = await floorPage.text();
+      const seqs: string[] = [];
+      const seqSeen = new Set<string>();
+      const seqRe = /callFloorDetail\('(\d+)'\)/g;
+      let seqMatch: RegExpExecArray | null;
+      while ((seqMatch = seqRe.exec(floorHtml)) !== null) {
+        if (!seqSeen.has(seqMatch[1])) {
+          seqSeen.add(seqMatch[1]);
+          seqs.push(seqMatch[1]);
+        }
+      }
+      if (seqs.length === 0) throw new Error('AK Plaza: no floor tabs found');
+
+      // 2) Each floor → keep only the brands under food-category articles.
+      const items: ScrapedItem[] = [];
+      const seen = new Set<string>();
+      for (const seq of seqs) {
+        const res = await fetch(
+          `${AK_ORIGIN}/ajax/html/getFloorDetailHtml?branchCode=${branchCode}&categoryCode=2&seq=${seq}`,
+          {
+            headers: { ...BROWSER_HEADERS, 'X-Requested-With': 'XMLHttpRequest', Referer: floorPageUrl },
+            cache: 'no-store',
+          }
+        );
+        if (!res.ok) continue;
+
+        const $ = load(await res.text());
+        const floor = $('.titleArea strong').first().text().trim() || '정보 없음';
+
+        $('.resultsArea article').each((_, art) => {
+          const category = $(art).find('h3').first().text().replace(/\s+/g, ' ').trim();
+          if (!isFoodCategory(category)) return;
+          $(art).find('li').each((__, li) => {
+            const name = $(li).find('strong').first().text().replace(/\s+/g, ' ').trim();
+            if (!name || seen.has(name)) return;
+            seen.add(name);
+            const phone = $(li).find('span').first().text().trim();
+            items.push({ name, category: category || '식당', floor, phone: phone || undefined });
+          });
+        });
+
+        await new Promise((r) => setTimeout(r, 100));
+      }
+
+      console.log(`[UrlScraper] AK Plaza (${branchCode}) parsed ${items.length} restaurants for ${mallName}`);
+      return { data: items, nursingInfo: null };
+    } catch (error) {
+      console.error(`[UrlScraper] AK Plaza parse error for ${mallName}:`, error);
       return { data: [], nursingInfo: null };
     }
   }
