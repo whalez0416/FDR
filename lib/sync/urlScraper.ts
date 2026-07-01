@@ -59,6 +59,9 @@ export class UrlScraper {
     if (url.includes('akplaza.com')) {
       return this.scrapeAkPlaza(url, mallName);
     }
+    if (url.includes('dept.galleria.co.kr')) {
+      return this.scrapeGalleria(url, mallName);
+    }
     return this.scrapeGeneric(url, mallName);
   }
 
@@ -429,6 +432,90 @@ export class UrlScraper {
       return { data: items, nursingInfo: null };
     } catch (error) {
       console.error(`[UrlScraper] AK Plaza parse error for ${mallName}:`, error);
+      return { data: [], nursingInfo: null };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Hanwha Galleria department stores (dept.galleria.co.kr). The dining
+  // directory ("GOURMET") is already food-scoped: each branch exposes it under
+  // `/store-info/{branch}/gourmet/journey-of-taste/{CATEGORY}` where CATEGORY is
+  // one of BASIC001..005 / EXPAND001..007 (FINE DINING, FOOD COURT, DELI…). Each
+  // category page server-renders `<a href=".../store/{id}"><img alt="상호">`, and
+  // each store's detail page carries `<dt>업종구분</dt><dd>업종</dd>` (genre) and
+  // `<dt>매장위치</dt><dd>층</dd>` (floor). We walk every category, collect the
+  // stores, then fetch each detail for its real genre + floor. No GPT — the
+  // directory is inherently restaurants only. Branch comes from the URL path.
+  // (maisongalleria has no dining and simply yields nothing.)
+  // ---------------------------------------------------------------------------
+  private static readonly GALLERIA_CATEGORIES = [
+    'BASIC001', 'BASIC002', 'BASIC003', 'BASIC004', 'BASIC005',
+    'EXPAND001', 'EXPAND002', 'EXPAND003', 'EXPAND004', 'EXPAND005', 'EXPAND006', 'EXPAND007',
+  ];
+
+  async scrapeGalleria(url: string, mallName: string): Promise<ScrapeResult> {
+    const BASE = 'https://dept.galleria.co.kr';
+    try {
+      const branch = url.match(/store-info\/([a-z]+)/)?.[1];
+      if (!branch) throw new Error(`Galleria: no branch in URL: ${url}`);
+
+      const items: ScrapedItem[] = [];
+      const seen = new Set<string>();
+
+      for (const cat of UrlScraper.GALLERIA_CATEGORIES) {
+        const marker = `/store-info/${branch}/gourmet/journey-of-taste/${cat}/store/`;
+        let catRes: Response;
+        try {
+          catRes = await fetch(`${BASE}/store-info/${branch}/gourmet/journey-of-taste/${cat}`, {
+            headers: BROWSER_HEADERS,
+            cache: 'no-store',
+          });
+        } catch {
+          continue;
+        }
+        if (!catRes.ok) continue;
+
+        const $ = load(await catRes.text());
+        const links: Array<{ id: string; href: string; name: string }> = [];
+        $('a[href]').each((_, a) => {
+          const href = $(a).attr('href') || '';
+          if (!href.includes(marker)) return;
+          const idMatch = href.match(/\/store\/(\d+)/);
+          if (!idMatch) return;
+          const name = ($(a).find('img').attr('alt') || '').replace(/\s+/g, ' ').trim();
+          if (name) links.push({ id: idMatch[1], href, name });
+        });
+
+        for (const link of links) {
+          if (seen.has(link.id)) continue;
+          seen.add(link.id);
+
+          let floor = '정보 없음';
+          let genre = '';
+          try {
+            const detailRes = await fetch(BASE + link.href, { headers: BROWSER_HEADERS, cache: 'no-store' });
+            if (detailRes.ok) {
+              const $d = load(await detailRes.text());
+              $d('dt').each((_, dt) => {
+                const label = $d(dt).text().trim();
+                const value = $d(dt).next('dd').text().replace(/\s+/g, ' ').trim();
+                if (label === '매장위치' && value) floor = value;
+                if (label === '업종구분' && value) genre = value;
+              });
+            }
+          } catch {
+            // keep defaults on a failed detail fetch
+          }
+
+          items.push({ name: link.name, category: genre || '식당', floor });
+          await new Promise((r) => setTimeout(r, 60));
+        }
+      }
+
+      console.log(`[UrlScraper] Galleria (${branch}) parsed ${items.length} restaurants for ${mallName}`);
+      return { data: items, nursingInfo: null };
+    } catch (error) {
+      console.error(`[UrlScraper] Galleria parse error for ${mallName}:`, error);
       return { data: [], nursingInfo: null };
     }
   }

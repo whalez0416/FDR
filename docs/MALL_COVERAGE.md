@@ -37,6 +37,7 @@
 - ✅ **현대백화점 14곳 + 현대아울렛/시티** — 등록 완료 (과거 CLOSED 재오픈 포함)
 - ✅ **타임스퀘어 영등포(경방)** — 전용 스크래퍼 추가(`scrapeTimesSquare`, EAT 카테고리 77곳). Liferay `StorePortlet get_stores` JSON 엔드포인트 페이지네이션(4개/page). curated 목록 등록 완료
 - ✅ **신세계사이먼 프리미엄아울렛 5곳(여주·파주·부산·시흥·제주)** — 전용 스크래퍼(`scrapeShinsegaeSimon`). `/api/brand` 단일 JSON에 전 지점 브랜드. **식음료 전용 카테고리가 없어** 카테고리 11("기타")로 1차 필터 후 **GPT(gpt-4o-mini)로 먹는 곳만 분류**(아울렛은 안내센터/올리브영/다이소 등 비식당이 기타에 섞임). storeCode 매핑 yeoju01·paju02·busan03·siheung05·jeju06
+- ✅ **갤러리아 5곳(명품관·타임월드·광교·센터시티·진주)** — 전용 스크래퍼(`scrapeGalleria`, 총 ~204곳). dept.galleria.co.kr GOURMET 디렉토리는 식음 전용. `/store-info/{branch}/gourmet/journey-of-taste/{BASIC001~005·EXPAND001~007}` 카테고리 순회 → `<a href=".../store/{id}"><img alt=상호>` 수집 → 각 store 상세페이지의 `<dt>업종구분</dt>`(업종=카테고리)·`<dt>매장위치</dt>`(층) 파싱. GPT 불필요. 메종갤러리아는 식당0(명품별관). branch슬러그: luxuryhall·timeworld·gwanggyo·centercity·jinju
 - ✅ **AK플라자 9곳(수원·분당·평택·원주·광명·금정·홍대·기흥·세종)** — 전용 스크래퍼(`scrapeAkPlaza`, 총 227곳). 층별안내(`/store/floor?store=XX`)에서 층 seq를 긁어 `/ajax/html/getFloorDetailHtml?branchCode=XX&categoryCode=2&seq=N`를 층마다 호출. 각 층 HTML의 `<article>` 블록 `<h3>` 카테고리로 식음(F&B·전문식당가·카페 등, 키즈카페 제외) 판별. **서버 렌더라 GPT 불필요.** store 코드 02수원·03분당·04평택·05원주·11광명·12금정·51홍대·52기흥·53세종
 - ✅ 위 전부 **매일 자동 동기화(cron)** 대상
 
@@ -45,7 +46,7 @@
 | 브랜드 | 구조 | 비고 |
 |---|---|---|
 | 스타필드(하남·고양·안성·수원·코엑스몰) | Vue SPA | 내부 XHR API 역설계 필요. 하남 백화점부는 SC00012로 이미 수록 |
-| 갤러리아(명품관·타임월드·광교·센터시티·진주) | 조사 필요 | 5~6곳 |
+| ~~갤러리아(명품관·타임월드·광교·센터시티·진주)~~ | dept.galleria.co.kr | ✅ 완료 (scrapeGalleria, 5곳 ~204식당) |
 | ~~AK플라자(수원·분당·평택·원주·광명·금정·홍대·기흥·세종)~~ | akplaza.com | ✅ 완료 (scrapeAkPlaza, 9곳 227식당) |
 | ~~신세계사이먼 프리미엄아울렛~~ | premiumoutlets.co.kr | ✅ 완료 (scrapeShinsegaeSimon) |
 | IFC몰·롯데월드몰 등 복합몰 | 제각각 | 개별 작업 (~~타임스퀘어~~ 완료) |

@@ -488,5 +488,25 @@
   {
     "mall_name": "AK플라자 세종점",
     "source_url": "https://www.akplaza.com/store/floor?store=53"
+  },
+  {
+    "mall_name": "갤러리아 명품관",
+    "source_url": "https://dept.galleria.co.kr/store-info/luxuryhall/gourmet/journey-of-taste"
+  },
+  {
+    "mall_name": "갤러리아 타임월드",
+    "source_url": "https://dept.galleria.co.kr/store-info/timeworld/gourmet/journey-of-taste"
+  },
+  {
+    "mall_name": "갤러리아 광교",
+    "source_url": "https://dept.galleria.co.kr/store-info/gwanggyo/gourmet/journey-of-taste"
+  },
+  {
+    "mall_name": "갤러리아 센터시티",
+    "source_url": "https://dept.galleria.co.kr/store-info/centercity/gourmet/journey-of-taste"
+  },
+  {
+    "mall_name": "갤러리아 진주",
+    "source_url": "https://dept.galleria.co.kr/store-info/jinju/gourmet/journey-of-taste"
   }
 ]
