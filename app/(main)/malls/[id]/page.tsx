@@ -259,6 +259,29 @@ export default function MallDetail({ params }: { params: { id: string } }) {
                     </p>
                  </div>
                )}
+               <div>
+                  <h4 className="text-sm font-bold text-[#2D241E] mb-3">실제 방문 리뷰 보기</h4>
+                  <div className="flex gap-2">
+                    {(() => {
+                      const q = encodeURIComponent(`${mall?.name || ''} ${selectedRestaurant.name}`.trim());
+                      return [
+                        { label: '네이버지도', href: `https://map.naver.com/p/search/${q}` },
+                        { label: '카카오맵', href: `https://map.kakao.com/?q=${q}` },
+                        { label: '구글맵', href: `https://www.google.com/maps/search/?api=1&query=${q}` },
+                      ].map(({ label, href }) => (
+                        <a
+                          key={label}
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 py-3 bg-white border border-[#F3E9E0] rounded-2xl text-center text-[13px] font-bold text-[#8D7B6D] active:scale-95 transition-transform"
+                        >
+                          {label}
+                        </a>
+                      ));
+                    })()}
+                  </div>
+               </div>
                <div className="flex gap-3 pt-4">
                   <button className="flex-1 bg-[#2D241E] text-white h-14 rounded-2xl font-bold active:scale-95 flex items-center justify-center gap-2 transition-transform"><Phone size={18} /> 전화 문의하기</button>
                   <button 
