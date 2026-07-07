@@ -45,7 +45,7 @@
 
 | 브랜드 | 구조 | 비고 |
 |---|---|---|
-| 스타필드(하남·고양·안성·수원·코엑스몰) | Vue SPA | 내부 XHR API 역설계 필요. 하남 백화점부는 SC00012로 이미 수록 |
+| ~~스타필드(하남·고양·안성·수원·코엑스몰) + 시티(위례·부천·명지)~~ | JSP + XHR | ✅ 완료 (scrapeStarfield). `/{branch}/tenant/categoryInfo.do`에서 "레스토랑&카페" 탭 버튼 id(=cate_seq)를 읽어 `ajaxCategoryDetailInfo.do`에 POST — **Accept: application/json 헤더 필수**(없으면 404). branch: hanam·goyang·anseong·suwon·coexmall·wirye·bucheon·myeongji. 하남 백화점부는 SC00012로 별도 수록 |
 | ~~갤러리아(명품관·타임월드·광교·센터시티·진주)~~ | dept.galleria.co.kr | ✅ 완료 (scrapeGalleria, 5곳 ~204식당) |
 | ~~AK플라자(수원·분당·평택·원주·광명·금정·홍대·기흥·세종)~~ | akplaza.com | ✅ 완료 (scrapeAkPlaza, 9곳 227식당) |
 | ~~신세계사이먼 프리미엄아울렛~~ | premiumoutlets.co.kr | ✅ 완료 (scrapeShinsegaeSimon) |

@@ -62,6 +62,9 @@ export class UrlScraper {
     if (url.includes('dept.galleria.co.kr')) {
       return this.scrapeGalleria(url, mallName);
     }
+    if (url.includes('starfield.co.kr')) {
+      return this.scrapeStarfield(url, mallName);
+    }
     return this.scrapeGeneric(url, mallName);
   }
 
@@ -516,6 +519,89 @@ export class UrlScraper {
       return { data: items, nursingInfo: null };
     } catch (error) {
       console.error(`[UrlScraper] Galleria parse error for ${mallName}:`, error);
+      return { data: [], nursingInfo: null };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Starfield (하남·고양·안성·수원·코엑스몰) & 스타필드시티 (위례·부천·명지) —
+  // one JSP app serves every branch under /{branch}/. The category directory
+  // (`/{branch}/tenant/categoryInfo.do`) renders a "레스토랑&카페" tab button
+  // whose id is the branch-specific cate_seq; POSTing it to
+  // `ajaxCategoryDetailInfo.do` returns JSON with every F&B tenant. The
+  // endpoint 404s unless the request advertises `Accept: application/json`
+  // (jQuery's dataType:'json' behaviour). A tenant is repeated once per
+  // sub-category it belongs to, so we dedupe by tnt_seq; `open_flag: 'OPEN'`
+  // marks not-yet-open stores, which we skip. No cookies or GPT needed.
+  // ---------------------------------------------------------------------------
+  async scrapeStarfield(url: string, mallName: string): Promise<ScrapeResult> {
+    const BASE = 'https://www.starfield.co.kr';
+    try {
+      const branch = url.match(/starfield\.co\.kr\/([a-z]+)/)?.[1];
+      if (!branch) throw new Error(`Starfield: no branch in URL: ${url}`);
+
+      // 1) Category page → the branch-specific "레스토랑&카페" cate_seq.
+      const pageRes = await fetch(`${BASE}/${branch}/tenant/categoryInfo.do`, {
+        headers: BROWSER_HEADERS,
+        cache: 'no-store',
+      });
+      if (!pageRes.ok) throw new Error(`Starfield category page HTTP ${pageRes.status}`);
+      const cateSeq = (await pageRes.text()).match(
+        /<button[^>]*id="(CT\d+)"[^>]*>\s*레스토랑&(?:amp;)?카페/
+      )?.[1];
+      if (!cateSeq) throw new Error(`Starfield: F&B tab not found for ${branch}`);
+
+      // 2) The tenant JSON for that category.
+      const res = await fetch(`${BASE}/${branch}/tenant/ajaxCategoryDetailInfo.do`, {
+        method: 'POST',
+        headers: {
+          ...BROWSER_HEADERS,
+          Accept: 'application/json, text/javascript, */*; q=0.01',
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          'X-Requested-With': 'XMLHttpRequest',
+          Referer: `${BASE}/${branch}/tenant/categoryInfo.do`,
+        },
+        body: new URLSearchParams({ cate_seq: cateSeq, firstIndex: '0' }),
+        cache: 'no-store',
+      });
+      if (!res.ok) throw new Error(`Starfield XHR HTTP ${res.status}`);
+
+      const json = (await res.json()) as {
+        '2depthCategory'?: Array<{ cate_seq?: string; cate_nm_ko?: string }>;
+        data?: Array<{
+          tnt_seq?: string;
+          tnt_nm_ko?: string;
+          fl?: string;
+          tnt_tels?: string;
+          mama_cate_seq?: string;
+          open_flag?: string;
+        }>;
+      };
+
+      const cateName = new Map(
+        (json['2depthCategory'] || []).map((c) => [c.cate_seq || '', (c.cate_nm_ko || '').trim()])
+      );
+
+      const items: ScrapedItem[] = [];
+      const seen = new Set<string>();
+      for (const t of json.data || []) {
+        const name = (t.tnt_nm_ko || '').replace(/\s+/g, ' ').trim();
+        const key = t.tnt_seq || name;
+        if (!name || seen.has(key) || t.open_flag === 'OPEN') continue;
+        seen.add(key);
+        const phone = (t.tnt_tels || '').trim();
+        items.push({
+          name,
+          category: cateName.get(t.mama_cate_seq || '') || '식당',
+          floor: (t.fl || '').trim() || '정보 없음',
+          phone: phone && phone !== '-' ? phone : undefined,
+        });
+      }
+
+      console.log(`[UrlScraper] Starfield (${branch}) parsed ${items.length} restaurants for ${mallName}`);
+      return { data: items, nursingInfo: null };
+    } catch (error) {
+      console.error(`[UrlScraper] Starfield parse error for ${mallName}:`, error);
       return { data: [], nursingInfo: null };
     }
   }
