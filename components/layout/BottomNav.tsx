@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Bookmark, User } from 'lucide-react';
+import { Home, Bookmark, BookOpen, User } from 'lucide-react';
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -28,6 +28,13 @@ export function BottomNav() {
           <Bookmark size={20} className={isActive('/saved') ? 'fill-current' : ''} />
         </div>
         <span className="text-[10px] font-bold">저장됨</span>
+      </Link>
+
+      <Link href="/guide" className={`flex flex-col items-center transition-all hover:opacity-80 active:scale-90 ${isActive('/guide') ? 'text-[#FF8A5B]' : 'text-[#8D7B6D]'}`}>
+        <div className={`p-2 rounded-xl mb-1 ${isActive('/guide') ? 'bg-[#FF8A5B]/10' : ''}`}>
+          <BookOpen size={20} />
+        </div>
+        <span className="text-[10px] font-bold">가이드</span>
       </Link>
 
       <Link href="/mypage" className={`flex flex-col items-center transition-all hover:opacity-80 active:scale-90 ${isActive('/mypage') ? 'text-[#FF8A5B]' : 'text-[#8D7B6D]'}`}>
