@@ -45,8 +45,20 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // AdSense 승인 후 Vercel 환경변수에 NEXT_PUBLIC_ADSENSE_CLIENT(ca-pub-…)를
+  // 넣고 재배포하면 광고 스크립트가 켜진다. 미설정 시 아무것도 안 붙음.
+  const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT
   return (
     <html lang="ko">
+      <head>
+        {adsenseClient && (
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
+            crossOrigin="anonymous"
+          />
+        )}
+      </head>
       <body className="bg-gray-100 min-h-screen">
         {children}
       </body>

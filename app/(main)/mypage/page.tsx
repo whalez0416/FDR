@@ -1,5 +1,6 @@
 import React from 'react';
-import { User, Settings, ShieldAlert } from 'lucide-react';
+import Link from 'next/link';
+import { User, Settings, ShieldAlert, FileText } from 'lucide-react';
 
 export default function MyPage() {
   return (
@@ -29,6 +30,12 @@ export default function MyPage() {
             고객센터
           </div>
         </button>
+        <Link href="/privacy" className="w-full bg-white p-4 rounded-2xl flex items-center justify-between text-sm font-bold text-[#2D241E] shadow-sm">
+          <div className="flex items-center gap-3">
+            <FileText size={18} className="text-[#C4B5A9]" />
+            개인정보처리방침
+          </div>
+        </Link>
       </div>
     </main>
   );
