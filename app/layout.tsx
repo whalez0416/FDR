@@ -45,9 +45,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // AdSense 승인 후 Vercel 환경변수에 NEXT_PUBLIC_ADSENSE_CLIENT(ca-pub-…)를
-  // 넣고 재배포하면 광고 스크립트가 켜진다. 미설정 시 아무것도 안 붙음.
-  const adsenseClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT
+  // 게시자 ID는 공개 정보(HTML에 그대로 노출됨)라 env 없이 하드코딩.
+  const adsenseClient = 'ca-pub-1771198613739815'
   return (
     <html lang="ko">
       <head>
